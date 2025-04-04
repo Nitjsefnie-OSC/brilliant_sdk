@@ -1,6 +1,10 @@
 # frame-ble
 
-Low-level library for Bluetooth LE connection to Brilliant Labs Frame
+Low-level library for Bluetooth LE connection to [Brilliant Labs Frame](https://brilliant.xyz/)
+
+[Frame SDK documentation](https://docs.brilliant.xyz/frame/frame-sdk/).
+
+[Examples repo on GitHub](https://github.com/CitizenOneX/frame_examples_python).
 
 ## Installation
 
