@@ -1,3 +1,7 @@
+## 1.1.1
+
+* Updated docs - added ReadTheDocs, updated README
+
 ## 1.1.0
 
 * Corrected `pyproject.toml` to include existing `bleak` dependency
