@@ -1,0 +1,26 @@
+name: brilliant_sdk_workspace
+
+packages:
+  - packages/**
+
+command:
+  version:
+    workspaceChangelog: true
+
+scripts:
+  bootstrap:
+    description: Get dependencies for all packages.
+    run: melos exec -- flutter pub get
+
+  analyze:
+    description: Run `flutter analyze` in all packages.
+    run: melos exec -- flutter analyze
+
+  format:
+    description: Format all Dart files.
+    run: melos exec -- dart format .
+
+  test:
+    description: Run tests for all packages.
+    run: melos exec -- flutter test
+
