@@ -7,3 +7,9 @@ environment:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+dependency_overrides:
+  frame_ble:
+    path: packages/frame_ble
+  frame_msg:
+    path: packages/frame_msg
