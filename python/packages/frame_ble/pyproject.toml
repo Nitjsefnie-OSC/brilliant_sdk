@@ -1,0 +1,42 @@
+[build-system]
+requires = [
+    "hatchling",
+    "setuptools",
+    "wheel",
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=2.0.0",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "frame-ble"
+version = "1.1.1"
+dependencies = [
+    "bleak>=0.22.3",
+]
+authors = [
+    { name = "CitizenOne" },
+]
+description = "Low-level library for Bluetooth LE connection to Brilliant Labs Frame"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/frame_ble"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/CitizenOneX/frame_ble_python"
+"Documentation" = "https://frame-ble-python.readthedocs.io/en/latest/index.html"
+"Bug Tracker" = "https://github.com/CitizenOneX/frame_ble_python/issues"
+"Changelog" = "https://github.com/CitizenOneX/frame_ble_python/blob/main/CHANGELOG.md"
