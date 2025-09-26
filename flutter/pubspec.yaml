@@ -1,0 +1,16 @@
+name: brilliant_sdk_workspace
+publish_to: none
+
+environment:
+  sdk: '>=3.6.0 <4.0.0'
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  melos: ^6.3.3
+
+dependency_overrides:
+  frame_ble:
+    path: packages/frame_ble
+  frame_msg:
+    path: packages/frame_msg
