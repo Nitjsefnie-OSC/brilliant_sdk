@@ -32,6 +32,7 @@
   "description": "A high-level library for interacting with Brilliant Labs Frame by passing structured messages between a Frameside app and a hostside app",
   "devDependencies": {
     "@types/node": "^22.15.17",
+    "@types/web-bluetooth": "^0.0.21",
     "typedoc": "^0.28.5",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
