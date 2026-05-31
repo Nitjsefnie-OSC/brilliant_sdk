@@ -1,4 +1,5 @@
-import { FrameMsg, StdLua, TxCode, TxCaptureSettings, RxAudio, RxPhoto, RxAudioSampleRate } from 'frame-msg';
+import { BrilliantMsg, StdLua, TxCode, TxCaptureSettings, RxAudio, RxPhoto, RxAudioSampleRate } from 'brilliant-msg';
+import { BrilliantDeviceType } from 'brilliant-ble';
 import frameApp from './lua/audio_video_stream_frame_app.lua?raw';
 
 // --- AudioWorkletProcessor code as a string ---
@@ -111,7 +112,8 @@ async function runPhotoProcessing(frame, photoQueue, getKeepRunning, photoInterv
         if (!getKeepRunning() || !frame.isConnected()) return false;
 
         console.log("Requesting photo...");
-        const captureSettings = new TxCaptureSettings({});
+        const resolution = frame.ble.type === BrilliantDeviceType.FRAME ? 512 : 640;
+        const captureSettings = new TxCaptureSettings({resolution: resolution});
         try {
             await frame.sendMessage(0x0d, captureSettings.pack());
             lastPhotoRequestTimeMs = Date.now();
@@ -222,7 +224,7 @@ let imageDisplayElement = null; // Single image element for display
  * for both audio and photo streams, including device connection and application lifecycle.
  */
 export async function run() {
-    const frame = new FrameMsg();
+    const frame = new BrilliantMsg();
     let audioContext;
     let pcmPlayerNode;
     let audioQueue;
@@ -265,7 +267,8 @@ export async function run() {
         rxAudio = new RxAudio({ streaming: true, sampleRate: SAMPLE_RATE, bitDepth: BIT_DEPTH });
         audioQueue = await rxAudio.attach(frame);
 
-        rxPhoto = new RxPhoto({ upright: true });
+        const upright = frame.ble.type === BrilliantDeviceType.FRAME; // rotate images from Frame 90 degrees counterclockwise, not Halo
+        rxPhoto = new RxPhoto({ upright: upright });
         photoQueue = await rxPhoto.attach(frame);
 
         let shutdownPromiseResolve;

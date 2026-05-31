@@ -1,11 +1,11 @@
-import { FrameMsg, StdLua, TxTextSpriteBlock } from 'frame-msg';
+import { BrilliantMsg, StdLua, TxTextSpriteBlock } from 'brilliant-msg';
 import frameApp from './lua/text_sprite_block_frame_app.lua?raw';
 
 /**
  * Uses TxTextSpriteBlock to send rows of rasterized text as sprite images to the Frame display.
  */
 export async function run() {
-  const frame = new FrameMsg();
+  const frame = new BrilliantMsg();
 
   try {
     // Web Bluetooth API requires a user gesture to initiate the connection
@@ -37,17 +37,21 @@ export async function run() {
     // It signals that it is ready by sending something on the string response channel.
     await frame.startFrameApp();
 
-    const tsb = new TxTextSpriteBlock({width: 600,
+    const tsb = new TxTextSpriteBlock({width: 640,
                                 fontSize: 40,
-                                maxDisplayRows: 7,
-                                text: "Hello, friend!\nこんにちは、友人！\n朋友你好！\nПривет, друг!\n안녕, 친구!\nשלום, חבר!\nمرحبا يا صديق",
+                                lineHeight: 50,
+                                maxDisplayLines: 7,
                                 fontFamily: "Monospace",
                                });
+
+    // get the sprites for the text we want to display
+    const sprites = tsb.createTextSprites("Hello, friend!\nこんにちは、友人！\n朋友你好！\nПривет, друг!\n안녕, 친구!\nשלום, חבר!\nمرحبا يا صديق");
+
     // send the Image Sprite Block header
     await frame.sendMessage(0x20, tsb.pack());
 
     // then send all the slices
-    for (const spr of tsb.sprites) {
+    for (const spr of sprites) {
       await frame.sendMessage(0x20, spr.pack());
     }
 

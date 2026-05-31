@@ -1,4 +1,4 @@
-import { FrameMsg, StdLua, TxSprite } from 'frame-msg';
+import { BrilliantMsg, StdLua, TxSprite } from 'brilliant-msg';
 import frameApp from './lua/sprite_indexed_png_frame_app.lua?raw';
 
 /**
@@ -12,7 +12,7 @@ import frameApp from './lua/sprite_indexed_png_frame_app.lua?raw';
  * - Pausing between sending each sprite to allow time for viewing on the Frame device.
  */
 export async function run() {
-  const frame = new FrameMsg();
+  const frame = new BrilliantMsg();
 
   try {
     // Web Bluetooth API requires a user gesture to initiate the connection
@@ -51,8 +51,8 @@ export async function run() {
     let sprite = await TxSprite.fromIndexedPngBytes(imageBytes);
     await frame.sendMessage(0x20, sprite.pack());
 
-    // sleep for 20 seconds to allow the user to see the image
-    await new Promise(resolve => setTimeout(resolve, 20000));
+    // sleep for 10 seconds to allow the user to see the image
+    await new Promise(resolve => setTimeout(resolve, 10000));
 
     // send the 2-bit image to Frame
     response = await fetch(new URL('./images/street_2bit.png', import.meta.url));
@@ -60,8 +60,8 @@ export async function run() {
     sprite = await TxSprite.fromIndexedPngBytes(imageBytes);
     await frame.sendMessage(0x20, sprite.pack());
 
-    // sleep for 20 more seconds to allow the user to see the image
-    await new Promise(resolve => setTimeout(resolve, 20000));
+    // sleep for 10 more seconds to allow the user to see the image
+    await new Promise(resolve => setTimeout(resolve, 10000));
 
     // send the 4-bit image to Frame
     response = await fetch(new URL('./images/hotdog_4bit.png', import.meta.url));
@@ -69,8 +69,8 @@ export async function run() {
     sprite = await TxSprite.fromIndexedPngBytes(imageBytes);
     await frame.sendMessage(0x20, sprite.pack());
 
-    // sleep for 20 seconds to allow the user to see the image
-    await new Promise(resolve => setTimeout(resolve, 20000));
+    // sleep for 10 seconds to allow the user to see the image
+    await new Promise(resolve => setTimeout(resolve, 10000));
 
     // unhook the print handler
     frame.detachPrintResponseHandler()
