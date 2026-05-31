@@ -1,9 +1,9 @@
-frame-ble
-=========
+brilliant-ble
+=============
 
-Low-level library for Bluetooth LE connection to `Brilliant Labs Frame <https://brilliant.xyz/>`_.
+Low-level library for Bluetooth LE connection to `Brilliant Labs Frame and Halo <https://brilliant.xyz/>`_.
 
-`Package frame-ble on PyPI. <https://pypi.org/project/frame-ble/>`_
+`Package brilliant-ble on PyPI. <https://pypi.org/project/brilliant-ble/>`_
 
 
 .. toctree::

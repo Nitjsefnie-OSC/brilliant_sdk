@@ -118,6 +118,14 @@ TxSprite
    :show-inheritance:
    :undoc-members:
 
+TxSpriteCoords
+--------------
+
+.. automodule:: brilliant_msg.tx_sprite_coords
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 TxTextSpriteBlock
 -----------------
 

@@ -1,7 +1,7 @@
 brilliant_msg
 =============
 
-Application-level library for passing rich objects between a host program and `Brilliant Labs Frame <https://brilliant.xyz/>`_, such as images, streamed audio, IMU data and rasterized text.
+Application-level library for passing rich objects between a host program and `Brilliant Labs Frame and Halo <https://brilliant.xyz/>`_, such as images, streamed audio, IMU data and rasterized text.
 
 `Package brilliant-msg on PyPI. <https://pypi.org/project/brilliant-msg/>`_
 
