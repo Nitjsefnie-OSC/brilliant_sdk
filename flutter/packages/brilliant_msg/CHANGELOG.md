@@ -1,3 +1,8 @@
+## 4.0.0
+
+* First release of `brilliant_msg`, renamed from `frame_msg`; replace `frame_msg` with `brilliant_msg` in `pubspec.yaml` and update imports from `package:frame_msg/` to `package:brilliant_msg/`
+* Adds support for Brilliant Labs Halo in addition to Brilliant Labs Frame
+
 ## 3.0.0
 
 * Added Halo device support across all message types and Lua libraries

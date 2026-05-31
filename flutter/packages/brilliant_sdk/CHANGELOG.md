@@ -1,3 +1,9 @@
+## 2.0.0
+
+* First release of `brilliant_sdk` under the new name; replace `frame_sdk` with `brilliant_sdk` in `pubspec.yaml`
+* Now depends on `brilliant_ble` (was `frame_ble`) and `brilliant_msg` (was `frame_msg`)
+* Adds support for Brilliant Labs Halo in addition to Brilliant Labs Frame
+
 ## 1.0.0
 
 * Added Halo device support

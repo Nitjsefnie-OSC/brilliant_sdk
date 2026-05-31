@@ -1,3 +1,8 @@
+## 5.0.0
+
+* First release of `brilliant_ble`, renamed from `frame_ble`; replace `frame_ble` with `brilliant_ble` in `pubspec.yaml` and update imports from `package:frame_ble/` to `package:brilliant_ble/`
+* Adds support for Brilliant Labs Halo in addition to Brilliant Labs Frame
+
 ## 4.0.0
 
 * Added Halo device support
