@@ -17,8 +17,9 @@ export default defineConfig({
       // Option A: Use built library
       //'frame-msg': path.resolve(__dirname, '../dist/frame-msg.es.js'),
 
-      // Option B Use source code instead of built bundle
+      // Option B: Use source code instead of built bundle
       'brilliant-msg': path.resolve(__dirname, '../src/index.ts'),
+      'brilliant-ble': path.resolve(__dirname, '../../brilliant-ble/src/index.ts'),
     },
   },
 });
