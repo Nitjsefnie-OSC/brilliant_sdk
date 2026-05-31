@@ -9,16 +9,15 @@ build:
   os: ubuntu-24.04
   tools:
     python: "3.13"
-    uv: latest
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
    configuration: python/packages/brilliant_msg/docs/source/conf.py
 
-# Install the package with docs extras using uv
+# Install the package with docs extras using pip
 python:
    install:
-   - method: uv
+   - method: pip
      path: python/packages/brilliant_msg
      extra_requirements:
        - docs
