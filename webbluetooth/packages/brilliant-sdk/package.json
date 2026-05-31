@@ -1,6 +1,6 @@
 {
   "name": "brilliant-sdk",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/brilliant-sdk.umd.js",
   "module": "dist/brilliant-sdk.es.js",
   "types": "dist/index.d.ts",
