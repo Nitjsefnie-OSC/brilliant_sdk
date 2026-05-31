@@ -31,6 +31,30 @@ dependencies:
 
 Then run `flutter pub get`.
 
+If your `pubspec.yaml` declares Lua library assets from `brilliant_msg`, update the package path:
+
+```yaml
+# Before
+flutter:
+  assets:
+    - packages/frame_msg/lua/data.min.lua
+    - packages/frame_msg/lua/sprite.min.lua
+    - packages/frame_msg/lua/plain_text.min.lua
+    - packages/frame_msg/lua/camera.min.lua
+    - packages/frame_msg/lua/audio.min.lua
+    - packages/frame_msg/lua/imu.min.lua
+
+# After
+flutter:
+  assets:
+    - packages/brilliant_msg/lua/data.min.lua
+    - packages/brilliant_msg/lua/sprite.min.lua
+    - packages/brilliant_msg/lua/plain_text.min.lua
+    - packages/brilliant_msg/lua/camera.min.lua
+    - packages/brilliant_msg/lua/audio.min.lua
+    - packages/brilliant_msg/lua/imu.min.lua
+```
+
 ---
 
 ## 2. Import changes
