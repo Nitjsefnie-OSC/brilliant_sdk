@@ -1,3 +1,7 @@
+## 9.0.1
+
+* Renamed `examples/` directory to `example/` to follow pub.dev layout conventions
+
 ## 9.0.0
 
 * Renamed package from `simple_frame_app` to `simple_brilliant_app`
