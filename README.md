@@ -10,9 +10,9 @@ Devices run user scripts in an on-device **Lua 5.3 VM** and expose the `frame.*`
 
 | Platform | Location | Packages |
 |----------|----------|---------|
-| **Python** | [`python/`](./python/) | `frame-ble`, `frame-msg`, `halo-emulator` |
-| **Flutter** (Android / iOS) | [`flutter/`](./flutter/) | `frame_ble`, `frame_msg`, `brilliant_sdk`, `simple_brilliant_app` |
-| **WebBluetooth** (TypeScript) | [`webbluetooth/`](./webbluetooth/) | `frame-ble`, `frame-msg` |
+| **Python** | [`python/`](./python/) | `brilliant-ble`, `brilliant-msg`, `brilliant-sdk` |
+| **Flutter** (Android / iOS) | [`flutter/`](./flutter/) | `brilliant_ble`, `brilliant_msg`, `brilliant_sdk`, `simple_brilliant_app` |
+| **WebBluetooth** (TypeScript) | [`webbluetooth/`](./webbluetooth/) | `brilliant-ble`, `brilliant-msg`, `brilliant-sdk` |
 
 Each implementation has its own README with installation, usage, and development instructions.
 
@@ -26,10 +26,10 @@ All three SDKs share the same two-layer architecture:
 ┌──────────────────────────────────────────────────────────┐
 │  Application (your code)                                 │
 ├──────────────────────────────────────────────────────────┤
-│  frame_msg  — rich message types (sprites, text, audio,  │
-│               IMU, photos, clicks …)                     │
+│  brilliant_msg  — rich message types (sprites, text,     │
+│               audio, IMU, photos, clicks …)              │
 ├──────────────────────────────────────────────────────────┤
-│  frame_ble  — BLE transport (connect, scan, MTU-aware    │
+│  brilliant_ble  — BLE transport (connect, scan, MTU-aware│
 │               packet splitting, DFU)                     │
 ├──────────────────────────────────────────────────────────┤
 │  Bluetooth LE                                            │
@@ -38,9 +38,9 @@ All three SDKs share the same two-layer architecture:
 └──────────────────────────────────────────────────────────┘
 ```
 
-**`frame_ble`** — Low-level BLE layer. Finds and connects to the device, negotiates MTU, splits large payloads into MTU-sized packets, and manages connection state.
+**`brilliant_ble`** — Low-level BLE layer. Finds and connects to the device, negotiates MTU, splits large payloads into MTU-sized packets, and manages connection state.
 
-**`frame_msg`** — Application-level messaging. Defines TX (host → device) and RX (device → host) message types for sprites, rasterized text, photos, audio, IMU data, taps, and click events. Each message type is paired with a corresponding Lua library that runs on the device.
+**`brilliant_msg`** — Application-level messaging. Defines TX (host → device) and RX (device → host) message types for sprites, rasterized text, photos, audio, IMU data, taps, and click events. Each message type is paired with a corresponding Lua library that runs on the device.
 
 **Lua on device** — Every message type has a matching `.lua` script (and minified `.min.lua`) that receives and renders the data on the device side.
 
@@ -65,7 +65,7 @@ Both **Halo** and **Frame** are supported across all SDK implementations. Device
 ## Documentation
 
 - [Brilliant Labs developer docs](https://docs.brilliant.xyz/)
-- [Frame Lua API reference](https://docs.brilliant.xyz/frame/frame-sdk/)
+- [Lua API reference](https://docs.brilliant.xyz/halo/halo-sdk/)
 
 ---
 
