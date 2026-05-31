@@ -13,12 +13,12 @@ build:
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
-   configuration: docs/source/conf.py
+   configuration: python/packages/brilliant_msg/docs/source/conf.py
 
 # Install the package with docs extras using uv
 python:
    install:
    - method: uv
-     path: .
+     path: python/packages/brilliant_msg
      extra_requirements:
        - docs
