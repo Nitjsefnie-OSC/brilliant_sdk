@@ -1,3 +1,9 @@
+## 7.0.0
+
+* First release of `brilliant-msg`, renamed from `frame-msg`; replace `uv add frame-msg` with `uv add brilliant-msg`
+* `FrameMsg` renamed to `BrilliantMsg`; update imports from `frame_msg` to `brilliant_msg`
+* Adds support for Brilliant Labs Halo in addition to Brilliant Labs Frame
+
 ## 6.0.0
 
 * Added Halo device support across all message types, Lua libraries, and examples

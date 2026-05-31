@@ -1,3 +1,9 @@
+## 3.0.0
+
+* First release of `brilliant-ble`, renamed from `frame-ble`; replace `uv add frame-ble` with `uv add brilliant-ble`
+* `FrameBle` renamed to `BrilliantBle`; update imports from `frame_ble` to `brilliant_ble`
+* Adds support for Brilliant Labs Halo in addition to Brilliant Labs Frame
+
 ## 2.0.0
 
 * Added Halo device support
