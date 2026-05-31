@@ -774,7 +774,7 @@ class BrilliantMsg {
    * @returns A Promise that resolves with the print response from the device if `awaitPrint` is true (default), otherwise void.
    */
   async printShortText(i = "") {
-    const e = i.replace(/'/g, "\\'").replace(/\n/g, ""), n = this.ble.type === R.FRAME ? `frame.display.text('${e}',1,1);frame.display.show();print(0)` : `frame.display.clear();frame.display.text('${e}',50,50);print(0)`;
+    const e = i.replace(/'/g, "\\'").replace(/\n/g, ""), n = this.ble.type === R.FRAME ? `frame.display.text('${e}',1,1);frame.display.show();print(0)` : `frame.display.clear();frame.display.text('${e}',100,100);print(0)`;
     return this.ble.sendLua(n, { awaitPrint: !0 });
   }
   /**
