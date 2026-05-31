@@ -18,6 +18,28 @@ Each implementation has its own README with installation, usage, and development
 
 ---
 
+## Installation
+
+**Python** — [PyPI](https://pypi.org/project/brilliant-sdk/)
+```bash
+pip install brilliant-sdk
+# or: pip install brilliant-ble  /  pip install brilliant-msg
+```
+
+**Flutter** — [pub.dev](https://pub.dev/packages/brilliant_sdk)
+```bash
+flutter pub add brilliant_sdk
+# or: flutter pub add brilliant_ble  /  flutter pub add brilliant_msg
+```
+
+**WebBluetooth** — [npm](https://www.npmjs.com/package/brilliant-sdk)
+```bash
+npm install brilliant-sdk
+# or: npm install brilliant-ble  /  npm install brilliant-msg
+```
+
+---
+
 ## Architecture
 
 All three SDKs share the same two-layer architecture:
@@ -71,4 +93,4 @@ Both **Halo** and **Frame** are supported across all SDK implementations. Device
 
 ## License
 
-All packages in this repository are released under the [BSD 3-Clause License](./flutter/LICENSE).
+All packages in this repository are released under the [BSD 3-Clause License](./LICENSE).
