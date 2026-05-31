@@ -55,6 +55,7 @@ jobs:
           mkdir -p deploy/brilliant-msg
           cp -r webbluetooth/packages/brilliant-ble/example/dist/. deploy/brilliant-ble/
           cp -r webbluetooth/packages/brilliant-msg/example/dist/. deploy/brilliant-msg/
+          cp webbluetooth/index.html deploy/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
