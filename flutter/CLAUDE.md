@@ -20,8 +20,8 @@ melos version     # bump versions across packages
 
 Run tests for a single package:
 ```bash
-cd packages/frame_msg && flutter test
-cd packages/frame_msg && flutter test test/tx/code_test.dart  # single test file
+cd packages/brilliant_msg && flutter test
+cd packages/brilliant_msg && flutter test test/tx/code_test.dart  # single test file
 ```
 
 Before publishing: replace all `path:` dependencies with semver constraints, then `dart pub publish` from the package folder.
@@ -30,20 +30,20 @@ Before publishing: replace all `path:` dependencies with semver constraints, the
 
 The SDK is organized in layers:
 
-**`frame_ble`** — BLE communication layer. Handles device scanning (`BrilliantBluetooth`), connection state, MTU-aware packet splitting, and Device Firmware Update. Uses `flutter_blue_plus`. This layer is device-type-agnostic.
+**`brilliant_ble`** — BLE communication layer. Handles device scanning (`BrilliantBluetooth`), connection state, MTU-aware packet splitting, and Device Firmware Update. Uses `flutter_blue_plus`. This layer is device-type-agnostic.
 
-**`frame_msg`** — Application-level messaging protocol. Defines TX (phone → Frame) and RX (Frame → phone) message types. TX messages implement `pack()` → `Uint8List` for BLE transmission. RX messages are parsed from incoming byte streams. Each message type has a corresponding Lua script in `lib/lua/` that runs on the device to handle parsing/rendering. Both full and `.min.lua` versions are included.
+**`brilliant_msg`** — Application-level messaging protocol. Defines TX (phone → Frame/Halo) and RX (Frame/Halo → phone) message types. TX messages implement `pack()` → `Uint8List` for BLE transmission. RX messages are parsed from incoming byte streams. Each message type has a corresponding Lua script in `lib/lua/` that runs on the device to handle parsing/rendering. Both full and `.min.lua` versions are included.
 
-**`brilliant_sdk`** — Meta-package that re-exports `frame_ble` and `frame_msg` as a single import.
+**`brilliant_sdk`** — Meta-package that re-exports `brilliant_ble` and `brilliant_msg` as a single import.
 
-**`simple_brilliant_app`** — High-level Flutter app framework (`SimpleFrameApp`, `FrameVisionApp`) for rapid development. Contains 15+ example apps under `examples/`.
+**`simple_brilliant_app`** — High-level Flutter app framework (`SimpleFrameApp`, `FrameVisionApp`) for rapid development. Contains 15+ example apps under `example/`.
 
 ## Key Design Patterns
 
 - **Message protocol**: Each TX message type has a unique message code (e.g. `0x0d`). `TxMsg.pack()` serializes to `Uint8List`. The BLE layer handles chunking based on negotiated MTU. Lua scripts on the device reassemble and render.
 - **Streams**: BLE connection state and incoming data are exposed as Dart streams. Device interaction is async/await throughout.
-- **Lua pairing**: Every message type in `frame_msg` has a corresponding `.lua` and `.min.lua` file. When adding new message types, both the Dart class and the Lua script must be updated together.
+- **Lua pairing**: Every message type in `brilliant_msg` has a corresponding `.lua` and `.min.lua` file. When adding new message types, both the Dart class and the Lua script must be updated together.
 
 ## Tests
 
-Tests live in `packages/frame_msg/test/` (4 test files). There are no tests in other packages currently.
+Tests live in `packages/brilliant_msg/test/` (4 test files). There are no tests in other packages currently.
