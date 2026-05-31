@@ -7,7 +7,10 @@
     "moduleResolution": "Node",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {
+      "brilliant-ble": ["../brilliant-ble/src/index.ts"]
+    }
   },
   "include": ["./src/**/*.ts"]
 }
