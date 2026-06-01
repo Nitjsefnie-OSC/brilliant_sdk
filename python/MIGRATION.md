@@ -200,3 +200,9 @@ await ble.send_audio(data: bytearray)
 # Remove main.lua from Halo and reset the Lua VM
 await ble.send_remove_signal()
 ```
+
+---
+
+## 9. New - Device behavior
+
+Halo starts with its display in `power_save` mode to conserve power, unlike Frame which started with the display enabled. Programs that use Halo's display should call `frame.display.power_save(false)`. Draw calls won't fail if the display is in power-save mode, but they won't be shown.

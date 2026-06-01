@@ -265,3 +265,9 @@ if (click == ClickType.long) print('long press');
 
 rxClick.detach(frame);
 ```
+
+---
+
+## 10. New - Device behavior
+
+Halo starts with its display in `power_save` mode to conserve power, unlike Frame which started with the display enabled. Programs that use Halo's display should call `frame.display.power_save(false)`. Draw calls won't fail if the display is in power-save mode, but they won't be shown.
