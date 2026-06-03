@@ -32,6 +32,16 @@ def _pygame_window(emulator: object, stop_event: threading.Event) -> None:  # ty
         pygame.K_t: "inject_imu_tap",
     }
 
+    win_size = 256 * scale
+    overlay = pygame.Surface((win_size, win_size), pygame.SRCALPHA)
+    pygame.draw.circle(
+        overlay,
+        (128, 128, 128, 160),
+        (win_size // 2, win_size // 2),
+        win_size // 2 - 5,
+        3,
+    )
+
     while not stop_event.is_set():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -48,6 +58,7 @@ def _pygame_window(emulator: object, stop_event: threading.Event) -> None:  # ty
         surface = pygame.image.fromstring(raw, (256, 256), mode)
         scaled = pygame.transform.scale(surface, (256 * scale, 256 * scale))
         screen.blit(scaled, (0, 0))
+        screen.blit(overlay, (0, 0))
         pygame.display.flip()
         clock.tick(30)
 
