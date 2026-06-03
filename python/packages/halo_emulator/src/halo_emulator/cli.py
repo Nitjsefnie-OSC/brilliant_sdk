@@ -34,13 +34,11 @@ def _pygame_window(emulator: object, stop_event: threading.Event) -> None:  # ty
 
     win_size = 256 * scale
     overlay = pygame.Surface((win_size, win_size), pygame.SRCALPHA)
-    pygame.draw.circle(
-        overlay,
-        (128, 128, 128, 160),
-        (win_size // 2, win_size // 2),
-        win_size // 2 - 5,
-        3,
-    )
+    overlay.fill((40, 40, 40, 210))
+    mask = pygame.Surface((win_size, win_size), pygame.SRCALPHA)
+    mask.fill((255, 255, 255, 255))
+    pygame.draw.circle(mask, (0, 0, 0, 0), (win_size // 2, win_size // 2), win_size // 2 - 8)
+    overlay.blit(mask, (0, 0), special_flags=pygame.BLEND_RGBA_MIN)
 
     while not stop_event.is_set():
         for event in pygame.event.get():
