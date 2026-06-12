@@ -595,11 +595,6 @@ export class BrilliantBle {
                                   .replace(/'/g, "\\'")
                                   .replace(/"/g, '\\"');
 
-        const openResponse = await this.sendLua(`f=frame.file.open('${frameFilePath}','w');print(1)`, {awaitPrint: true});
-        if (openResponse !== "1") {
-            throw new Error(`Failed to open file ${frameFilePath} on device. Response: ${openResponse}`);
-        }
-
         const luaCommandOverhead = `f:write("");print(1)`.length;
         const maxChunkSize = this.getMaxPayload(true) - luaCommandOverhead;
 
@@ -607,35 +602,21 @@ export class BrilliantBle {
             throw new Error("Max payload size too small for file upload operations.");
         }
 
-        let i = 0;
-        while (i < escapedContent.length) {
-            let currentChunkSize = Math.min(maxChunkSize, escapedContent.length - i);
-            let chunk = escapedContent.substring(i, i + currentChunkSize);
+        // Chunk by UTF-8 byte length (not string length) so that characters
+        // that expand to multiple bytes can't push a packet over the MTU
+        const chunks = chunkLuaString(new TextEncoder().encode(escapedContent), maxChunkSize);
 
-            while (chunk.endsWith("\\")) {
-                let trailingSlashes = 0;
-                for (let k = chunk.length - 1; k >= 0; k--) {
-                    if (chunk[k] === '\\') trailingSlashes++; else break;
-                }
-                if (trailingSlashes % 2 !== 0) {
-                    if (currentChunkSize > 1) {
-                        currentChunkSize--;
-                        chunk = escapedContent.substring(i, i + currentChunkSize);
-                    } else {
-                        await this.sendLua("f:close();print(nil)", {awaitPrint: true});
-                        throw new Error("Cannot safely chunk content due to isolated escape character at chunk boundary.");
-                    }
-                } else {
-                    break;
-                }
-            }
+        const openResponse = await this.sendLua(`f=frame.file.open('${frameFilePath}','w');print(1)`, {awaitPrint: true});
+        if (openResponse !== "1") {
+            throw new Error(`Failed to open file ${frameFilePath} on device. Response: ${openResponse}`);
+        }
 
+        for (const chunk of chunks) {
             const writeResponse = await this.sendLua(`f:write("${chunk}");print(1)`, {awaitPrint: true});
             if (writeResponse !== "1") {
                  await this.sendLua("f:close();print(nil)", {awaitPrint: true});
                 throw new Error(`Failed to write chunk to ${frameFilePath}. Response: ${writeResponse}`);
             }
-            i += currentChunkSize;
         }
         await this.sendLua("f:close();print(nil)", {awaitPrint: true});
     }
@@ -703,4 +684,56 @@ export class BrilliantBle {
             sentBytes += currentChunkActualDataSize;
         }
     }
+}
+
+/**
+ * Splits payload (the UTF-8 bytes of an escaped Lua string literal) into
+ * chunks of at most maxChunkBytes bytes, without splitting a multi-byte
+ * UTF-8 sequence or a Lua escape sequence across two chunks.
+ * @param payload The UTF-8 encoded bytes of the escaped Lua string.
+ * @param maxChunkBytes The maximum size of each chunk in bytes.
+ * @returns The chunks, decoded back to strings.
+ */
+export function chunkLuaString(payload: Uint8Array, maxChunkBytes: number): string[] {
+    if (maxChunkBytes <= 0) {
+        throw new Error("maxChunkBytes must be positive.");
+    }
+
+    const decoder = new TextDecoder();
+    const chunks: string[] = [];
+    let index = 0;
+
+    while (index < payload.length) {
+        let end = index + maxChunkBytes;
+
+        if (end >= payload.length) {
+            end = payload.length;
+        } else {
+            // Don't split a multi-byte UTF-8 sequence: back up while the byte
+            // at the split point is a continuation byte (0b10xxxxxx)
+            while (end > index && (payload[end] & 0xC0) === 0x80) {
+                end--;
+            }
+
+            // Don't split an escape sequence: an odd number of trailing
+            // backslashes means the last one starts an escape whose second
+            // character would land in the next chunk
+            let trailingBackslashes = 0;
+            while (end - 1 - trailingBackslashes >= index && payload[end - 1 - trailingBackslashes] === 0x5C) {
+                trailingBackslashes++;
+            }
+            if (trailingBackslashes % 2 === 1) {
+                end--;
+            }
+
+            if (end === index) {
+                throw new Error("maxChunkBytes is too small to hold the next character of the payload.");
+            }
+        }
+
+        chunks.push(decoder.decode(payload.subarray(index, end)));
+        index = end;
+    }
+
+    return chunks;
 }

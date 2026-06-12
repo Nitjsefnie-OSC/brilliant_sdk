@@ -3,7 +3,7 @@ import hashlib
 import os
 
 from bleak import BleakClient, BleakScanner, BleakError
-from typing import Final
+from typing import Final, List
 from enum import Enum
 
 from . import _smp
@@ -13,6 +13,49 @@ class BrilliantDeviceType(Enum):
     FRAME = "Frame"
     HALO = "Halo"
     UNKNOWN = "Unknown"
+
+
+def chunk_lua_string(payload: bytes, max_chunk_bytes: int) -> List[str]:
+    """
+    Splits payload (the UTF-8 bytes of an escaped Lua string literal) into
+    chunks of at most max_chunk_bytes bytes, without splitting a multi-byte
+    UTF-8 sequence or a Lua escape sequence across two chunks.
+    """
+    if max_chunk_bytes <= 0:
+        raise ValueError("max_chunk_bytes must be positive")
+
+    chunks: List[str] = []
+    index = 0
+
+    while index < len(payload):
+        end = index + max_chunk_bytes
+
+        if end >= len(payload):
+            end = len(payload)
+        else:
+            # Don't split a multi-byte UTF-8 sequence: back up while the byte
+            # at the split point is a continuation byte (0b10xxxxxx)
+            while end > index and (payload[end] & 0xC0) == 0x80:
+                end -= 1
+
+            # Don't split an escape sequence: an odd number of trailing
+            # backslashes means the last one starts an escape whose second
+            # character would land in the next chunk
+            trailing_backslashes = 0
+            while (end - 1 - trailing_backslashes >= index
+                   and payload[end - 1 - trailing_backslashes] == 0x5C):
+                trailing_backslashes += 1
+            if trailing_backslashes % 2 == 1:
+                end -= 1
+
+            if end == index:
+                raise ValueError(
+                    "max_chunk_bytes is too small to hold the next character of the payload")
+
+        chunks.append(payload[index:end].decode())
+        index = end
+
+    return chunks
 
 class BrilliantBle:
     """
@@ -322,30 +365,11 @@ class BrilliantBle:
             await_print=True
         )
 
-        # Calculate chunk size accounting for the Lua command overhead
-        chunk_size: int = self.max_lua_payload() - 22
-
-        # Upload in chunks
-        i = 0
-        while i < len(content):
-            # Calculate initial chunk size
-            current_chunk_size = min(chunk_size, len(content) - i)
-
-            # Check for escape sequences at the chunk boundary
-            if current_chunk_size < len(content) - i:
-                # Look for the last non-escaped backslash in the chunk
-                pos = i + current_chunk_size - 1
-                while pos > i:
-                    # Check if we're in the middle of an escape sequence
-                    if content[pos] == '\\' and (pos == i or content[pos-1] != '\\'):
-                        # If we find an unescaped backslash, adjust the chunk size
-                        current_chunk_size = pos - i
-                        break
-                    pos -= 1
-
-            chunk: str = content[i:i + current_chunk_size]
+        # Chunk by UTF-8 byte length (not string length) so that characters
+        # that expand to multiple bytes can't push a packet over the MTU,
+        # accounting for the Lua command overhead
+        for chunk in chunk_lua_string(content.encode(), self.max_lua_payload() - 22):
             await self.send_lua(f'f:write("{chunk}");print(1)', await_print=True)
-            i += current_chunk_size
 
         # Close the file
         await self.send_lua("f:close();print(nil)", await_print=True)

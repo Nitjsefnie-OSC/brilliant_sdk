@@ -185,8 +185,9 @@ class BrilliantDevice {
         throw BrilliantBluetoothException("Device is not connected");
       }
 
+      final data = utf8.encode(string);
       final maxLength = maxStringLength;
-      if (maxLength == null || string.length > maxLength) {
+      if (maxLength == null || data.length > maxLength) {
         throw BrilliantBluetoothException("Payload exceeds allowed length of ${maxLength ?? 'unknown'}");
       }
 
@@ -208,7 +209,7 @@ class BrilliantDevice {
       }
 
       // Now perform the write
-      await tx.write(utf8.encode(string), withoutResponse: false, allowLongWrite: true);
+      await tx.write(data, withoutResponse: false, allowLongWrite: true);
 
       // Wait for the response if needed
       if (awaitResponse && responseFuture != null) {
@@ -404,29 +405,15 @@ class BrilliantDevice {
         throw ("Error opening file: $resp");
       }
 
-      int index = 0;
-      int chunkSize = maxStringLength! - 22;
-
-      while (index < file.length) {
-        // Don't go over the end of the string
-        if (index + chunkSize > file.length) {
-          chunkSize = file.length - index;
-        }
-
-        // Don't split on an escape character
-        while (file[index + chunkSize - 1] == '\\') {
-          chunkSize -= 1;
-        }
-
-        String chunk = file.substring(index, index + chunkSize);
-
+      // Chunk by UTF-8 byte length (not string length) so that characters
+      // that expand to multiple bytes can't push a packet over the MTU
+      for (final chunk
+          in chunkLuaString(utf8.encode(file), maxStringLength! - 22)) {
         resp = await sendString("f:write('$chunk');print(2)", awaitResponse: true, log: false);
 
         if (resp != "2") {
           throw ("Error writing file: $resp");
         }
-
-        index += chunkSize;
       }
 
       resp = await sendString("f:close();print(2)", awaitResponse: true, log: false);
@@ -444,4 +431,53 @@ class BrilliantDevice {
       return Future.error(BrilliantBluetoothException(error.toString()));
     }
   }
+}
+
+/// Splits [payload] (the UTF-8 bytes of an escaped Lua string literal) into
+/// chunks of at most [maxChunkBytes] bytes, without splitting a multi-byte
+/// UTF-8 sequence or a Lua escape sequence across two chunks.
+List<String> chunkLuaString(List<int> payload, int maxChunkBytes) {
+  if (maxChunkBytes <= 0) {
+    throw ArgumentError.value(
+        maxChunkBytes, 'maxChunkBytes', 'must be positive');
+  }
+
+  final chunks = <String>[];
+  int index = 0;
+
+  while (index < payload.length) {
+    int end = index + maxChunkBytes;
+
+    if (end >= payload.length) {
+      end = payload.length;
+    } else {
+      // Don't split a multi-byte UTF-8 sequence: back up while the byte at
+      // the split point is a continuation byte (0b10xxxxxx)
+      while (end > index && (payload[end] & 0xC0) == 0x80) {
+        end--;
+      }
+
+      // Don't split an escape sequence: an odd number of trailing
+      // backslashes means the last one starts an escape whose second
+      // character would land in the next chunk
+      int trailingBackslashes = 0;
+      while (end - 1 - trailingBackslashes >= index &&
+          payload[end - 1 - trailingBackslashes] == 0x5C) {
+        trailingBackslashes++;
+      }
+      if (trailingBackslashes.isOdd) {
+        end--;
+      }
+
+      if (end == index) {
+        throw ArgumentError.value(maxChunkBytes, 'maxChunkBytes',
+            'too small to hold the next character of the payload');
+      }
+    }
+
+    chunks.add(utf8.decode(payload.sublist(index, end)));
+    index = end;
+  }
+
+  return chunks;
 }

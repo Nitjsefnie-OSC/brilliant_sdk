@@ -1,3 +1,8 @@
+## 3.1.1
+
+* Fixed `upload_file_from_string()` failing on Lua files containing non-ASCII characters (e.g. `°`): chunks are now sized by UTF-8 byte length rather than string length, so multi-byte characters can no longer push a packet over the MTU. Multi-byte characters and escape sequences are never split across chunks
+* New `chunk_lua_string()` module-level function exposing the byte-accurate chunking
+
 ## 3.1.0
 
 * New `ota_flash_firmware()` — flashes signed app firmware (`zephyr.signed.bin`) to a Halo device over the BLE SMP (MCUmgr) OTA service. By default the uploaded image is confirmed and the device rebooted in one call; pass `confirm=False` to mark the image for a one-shot test boot instead (MCUboot reverts to the previous firmware on the next reboot unless confirmed). Optional `progress_handler(bytes_sent, total_bytes)` callback (sync or async) reports upload progress; `reboot` and `chunk_size` parameters. Halo only

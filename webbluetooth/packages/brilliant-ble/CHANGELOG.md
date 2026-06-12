@@ -1,3 +1,8 @@
+## 1.0.1
+
+* Fixed `uploadFileFromString()` failing on Lua files containing non-ASCII characters (e.g. `°`): chunks are now sized by UTF-8 byte length rather than string length, so multi-byte characters can no longer push a packet over the MTU. Multi-byte characters and escape sequences are never split across chunks
+* New `chunkLuaString()` function exposing the byte-accurate chunking, exported from package
+
 ## 0.4.0
 
 * Added Halo device support

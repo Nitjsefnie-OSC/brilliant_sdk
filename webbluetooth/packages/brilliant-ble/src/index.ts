@@ -1,1 +1,1 @@
-export { BrilliantBle, BrilliantDeviceType } from './brilliant-ble';
+export { BrilliantBle, BrilliantDeviceType, chunkLuaString } from './brilliant-ble';

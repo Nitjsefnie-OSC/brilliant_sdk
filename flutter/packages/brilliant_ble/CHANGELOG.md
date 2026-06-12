@@ -1,3 +1,9 @@
+## 5.0.1
+
+* Fixed `uploadScript` failing on Lua files containing non-ASCII characters (e.g. `°`): chunks are now sized by UTF-8 byte length rather than string length, so multi-byte characters can no longer push a packet over the MTU (#12). Multi-byte characters and escape sequences are never split across chunks
+* `sendString` now validates the payload's UTF-8 byte length against `maxStringLength` instead of its string length
+* New `chunkLuaString()` top-level function exposing the byte-accurate chunking
+
 ## 5.0.0
 
 * First release of `brilliant_ble`, renamed from `frame_ble`; replace `frame_ble` with `brilliant_ble` in `pubspec.yaml` and update imports from `package:frame_ble/` to `package:brilliant_ble/`
