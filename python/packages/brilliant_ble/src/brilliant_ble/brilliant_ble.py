@@ -1,9 +1,13 @@
 import asyncio
+import hashlib
 import os
 
 from bleak import BleakClient, BleakScanner, BleakError
 from typing import Final
 from enum import Enum
+
+from . import _smp
+from ._smp import OtaError, SmpClient
 
 class BrilliantDeviceType(Enum):
     FRAME = "Frame"
@@ -364,6 +368,138 @@ class BrilliantBle:
             content = f.read()
 
         await self.upload_file_from_string(content, frame_file_path)
+
+    async def _ota_start(self) -> SmpClient:
+        if not self.is_connected():
+            raise OtaError("Device is not connected")
+
+        if self._type != BrilliantDeviceType.HALO:
+            raise OtaError("OTA firmware update is only supported on Halo devices")
+
+        if self._client.services.get_service(_smp.SMP_SERVICE_UUID) is None:
+            raise OtaError("SMP service not found on device; its firmware may not support OTA updates")
+
+        smp = SmpClient(
+            lambda packet: self._client.write_gatt_char(_smp.SMP_CHAR_UUID, packet, response=False)
+        )
+        await self._client.start_notify(_smp.SMP_CHAR_UUID, lambda _, data: smp.feed(data))
+        return smp
+
+    async def _ota_stop(self):
+        try:
+            if self._client is not None:
+                await self._client.stop_notify(_smp.SMP_CHAR_UUID)
+        except Exception:
+            # the device may already have disconnected (e.g. rebooting after a flash)
+            pass
+
+    async def ota_flash_firmware(self, firmware, progress_handler=None, confirm=True, reboot=True, chunk_size=384) -> bytes:
+        """
+        Flashes signed app firmware to a connected Halo device over the
+        BLE SMP (MCUmgr) OTA service. This is only applicable to Halo devices.
+
+        Args:
+            firmware: Path to the signed firmware image (zephyr.signed.bin),
+                or the image content as bytes
+            progress_handler: Optional callable invoked as
+                `progress_handler(bytes_sent, total_bytes)` after each
+                acknowledged chunk; may be sync or async
+            confirm (bool): If True (default), the uploaded image is confirmed
+                before reboot and becomes the permanent firmware. If False, the
+                image is marked for a one-shot test boot instead: MCUboot
+                reverts to the previous firmware on the next reboot unless
+                `ota_confirm()` is called after reconnecting
+            reboot (bool): If True (default), the device is rebooted to apply
+                the update. The device disconnects during reboot
+            chunk_size (int): Upload payload bytes per SMP packet
+
+        Returns:
+            The MCUboot hash (bytes) of the uploaded image.
+
+        Raises:
+            OtaError: If the device is not a connected Halo, or the update fails
+
+        Note:
+            First-time flashing and bootloader flashing still require the Alif
+            wired tools; this only updates a device that already boots an
+            OTA-enabled app firmware.
+        """
+        if isinstance(firmware, (bytes, bytearray)):
+            firmware = bytes(firmware)
+        else:
+            with open(firmware, "rb") as f:
+                firmware = f.read()
+
+        smp = await self._ota_start()
+        try:
+            # probe the image state first so a non-responsive SMP stack fails fast
+            await smp.request(_smp.OP_READ, _smp.GROUP_IMAGE, _smp.ID_IMAGE_STATE, {})
+
+            sha = hashlib.sha256(firmware).digest()
+            off = 0
+            while off < len(firmware):
+                chunk = firmware[off:off + chunk_size]
+                if off == 0:
+                    payload = {"image": 0, "len": len(firmware), "sha": sha, "off": off, "data": chunk}
+                else:
+                    payload = {"off": off, "data": chunk}
+
+                try:
+                    # the first chunk can take a long time while the device erases flash
+                    rsp = await smp.request(_smp.OP_WRITE, _smp.GROUP_IMAGE, _smp.ID_IMAGE_UPLOAD,
+                                            payload, timeout=90.0 if off == 0 else 30.0)
+                except OtaError as e:
+                    raise OtaError(f"Upload failed at offset {off}: {e}")
+
+                off = rsp["off"] if isinstance(rsp.get("off"), int) else off + len(chunk)
+
+                if progress_handler is not None:
+                    if asyncio.iscoroutinefunction(progress_handler):
+                        await progress_handler(off, len(firmware))
+                    else:
+                        progress_handler(off, len(firmware))
+
+            rsp = await smp.request(_smp.OP_READ, _smp.GROUP_IMAGE, _smp.ID_IMAGE_STATE, {})
+            images = rsp.get("images") or []
+            candidates = [img for img in images
+                          if isinstance(img, dict) and isinstance(img.get("hash"), bytes)]
+            candidate = (next((img for img in candidates if img.get("slot") == 1), None)
+                         or next((img for img in candidates if img.get("active") is False), None))
+            if candidate is None:
+                raise OtaError("No uploaded image found in slot 1")
+            image_hash = candidate["hash"]
+
+            await smp.request(_smp.OP_WRITE, _smp.GROUP_IMAGE, _smp.ID_IMAGE_STATE,
+                              {"hash": image_hash, "confirm": confirm})
+
+            if reboot:
+                try:
+                    await smp.request(_smp.OP_WRITE, _smp.GROUP_OS, _smp.ID_OS_RESET, {}, timeout=3.0)
+                except (OtaError, BleakError):
+                    # disconnect during reboot is normal
+                    pass
+
+            return image_hash
+        finally:
+            await self._ota_stop()
+
+    async def ota_confirm(self):
+        """
+        Confirms the currently running firmware image, making it permanent.
+        This is only applicable to Halo devices.
+
+        Use after rebooting into an image flashed with
+        `ota_flash_firmware(..., confirm=False)`; without confirmation MCUboot
+        reverts to the previous firmware on the next reboot.
+
+        Raises:
+            OtaError: If the device is not a connected Halo, or the request fails
+        """
+        smp = await self._ota_start()
+        try:
+            await smp.request(_smp.OP_WRITE, _smp.GROUP_IMAGE, _smp.ID_IMAGE_STATE, {"confirm": True})
+        finally:
+            await self._ota_stop()
 
     async def send_message(self, msg_code: int, payload: bytes, show_me: bool=False) -> None:
         """

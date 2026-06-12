@@ -1,3 +1,10 @@
+## 3.1.0
+
+* New `ota_flash_firmware()` — flashes signed app firmware (`zephyr.signed.bin`) to a Halo device over the BLE SMP (MCUmgr) OTA service. By default the uploaded image is confirmed and the device rebooted in one call; pass `confirm=False` to mark the image for a one-shot test boot instead (MCUboot reverts to the previous firmware on the next reboot unless confirmed). Optional `progress_handler(bytes_sent, total_bytes)` callback (sync or async) reports upload progress; `reboot` and `chunk_size` parameters. Halo only
+* New `ota_confirm()` — confirms the currently running firmware image, completing a `confirm=False` test flash after reboot and reconnection. Halo only
+* New `OtaError` exception raised by the OTA methods
+* New `examples/ota_flash.py` demonstrating OTA flashing. Note that first-time flashing and bootloader flashing still require the Alif wired tools
+
 ## 3.0.0
 
 * First release of `brilliant-ble`, renamed from `frame-ble`; replace `uv add frame-ble` with `uv add brilliant-ble`
