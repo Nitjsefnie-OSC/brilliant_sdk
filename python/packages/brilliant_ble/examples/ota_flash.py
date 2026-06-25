@@ -43,7 +43,7 @@ async def main():
 
         print(f"\nFlashed image with MCUboot hash {image_hash.hex()}")
         if not args.dangerously_auto_confirm:
-            print("Image marked for test boot: after verifying the new firmware, reconnect and call ota_confirm() to keep it")
+            print("Image marked for test boot: after verifying the new firmware, reconnect and confirm externally to keep it, or self-confirm within the application firmware after successful boot (boot_write_img_confirmed())")
         print("Device is rebooting...")
 
     except OtaError as e:
