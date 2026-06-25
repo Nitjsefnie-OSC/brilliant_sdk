@@ -2,11 +2,12 @@
 Flashes signed app firmware to a Halo device over the BLE SMP (MCUmgr) OTA service.
 
 Usage:
-    python ota_flash.py zephyr.signed.bin         # upload, confirm, reboot
-    python ota_flash.py zephyr.signed.bin --test  # one-shot test boot instead
+    python ota_flash.py zephyr.signed.bin                            # one-shot test boot (default)
+    python ota_flash.py zephyr.signed.bin --dangerously-auto-confirm  # upload, confirm, reboot
 
-After a --test flash, MCUboot reverts to the previous firmware on the next
-reboot unless the new image is confirmed: reconnect and call ota_confirm().
+By default the image is marked for a one-shot test boot: MCUboot reverts to the
+previous firmware on the next reboot unless the new image is confirmed:
+reconnect and call ota_confirm().
 
 Note: first-time flashing and bootloader flashing still require the Alif wired
 tools. This only updates a device that already boots an OTA-enabled app firmware.
@@ -20,7 +21,7 @@ from brilliant_ble import BrilliantBle, OtaError
 async def main():
     parser = argparse.ArgumentParser(description="Flash signed app firmware to a Halo device over BLE SMP OTA")
     parser.add_argument("firmware", help="path to zephyr.signed.bin")
-    parser.add_argument("--test", action="store_true", help="mark the image for a one-shot test boot instead of confirming it")
+    parser.add_argument("--dangerously-auto-confirm", action="store_true", help="confirm the image immediately instead of marking it for a one-shot test boot")
     parser.add_argument("--chunk-size", type=int, default=384, help="upload payload bytes per packet (default 384)")
     args = parser.parse_args()
 
@@ -36,12 +37,12 @@ async def main():
         image_hash = await halo.ota_flash_firmware(
             args.firmware,
             progress_handler=progress,
-            confirm=not args.test,
+            confirm=args.dangerously_auto_confirm,
             chunk_size=args.chunk_size,
         )
 
         print(f"\nFlashed image with MCUboot hash {image_hash.hex()}")
-        if args.test:
+        if not args.dangerously_auto_confirm:
             print("Image marked for test boot: after verifying the new firmware, reconnect and call ota_confirm() to keep it")
         print("Device is rebooting...")
 
