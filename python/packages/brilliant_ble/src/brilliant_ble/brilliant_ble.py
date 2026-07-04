@@ -549,6 +549,8 @@ class BrilliantBle:
         # Validation
         if not 0 <= msg_code <= 255:
             raise ValueError(f"Message code must be 0-255, got {msg_code}")
+        if self.is_connected() is False:
+            raise ValueError("Cannot send message: Not connected to any device")
 
         total_size = len(payload)
         if total_size > MAX_TOTAL_SIZE:
