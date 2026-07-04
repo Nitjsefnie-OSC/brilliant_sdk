@@ -310,6 +310,8 @@ class DisplayBuffer:
             for row in range(h):
                 for col in range(w):
                     pidx = pixel_indices[row * w + col]
+                    if pidx == 0:
+                        continue  # palette entry 0 is transparent (matches hardware)
                     if pidx < len(local_pal):
                         r, g, b = local_pal[pidx]
                         for dy in range(y_scale):
