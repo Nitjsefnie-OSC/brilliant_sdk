@@ -90,6 +90,10 @@ mixin SimpleFrameAppState<T extends StatefulWidget> on State<T> {
         }
       }
     }).listen((device) async {
+      // the scan stream emits on every scan result update, so the same device
+      // can be emitted repeatedly in quick succession - only connect once
+      if (currentState != ApplicationState.scanning) return;
+
       _log.fine('Frame found, connecting');
       currentState = ApplicationState.connecting;
       if (mounted) setState(() {});
