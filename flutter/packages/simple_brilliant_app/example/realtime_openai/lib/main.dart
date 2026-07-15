@@ -32,6 +32,10 @@ const lc3SampleRate = 16000;
 const lc3Bitrate = 32000;
 const lc3FrameDurationUs = 10000;
 
+/// bytes per encoded LC3 frame (32kbps, 10ms -> 40 bytes); used to count how
+/// many 10ms frames are in each packet sent to the device, for the playback clock
+const lc3FrameBytes = lc3Bitrate ~/ 8 * lc3FrameDurationUs ~/ 1000000;
+
 /// send mic audio in ~40-60ms batches (rather than per 10ms frame)
 const micBatchBytes = 1920;
 
@@ -46,11 +50,18 @@ const haloMicGainValue = 10;
 const defaultEndpoint = 'wss://api.openai.com/v1/realtime?model=gpt-realtime';
 
 
-/// one entry in the conversation transcript
+/// one entry (chat bubble) in the conversation transcript
 class TranscriptEntry {
   final bool fromUser;
   String text;
-  TranscriptEntry(this.fromUser, this.text);
+
+  /// turn id this bubble belongs to (response id for the model, input item id
+  /// for the user; null on backends that don't tag events). Used to keep two
+  /// same-speaker turns in separate bubbles even when their transcripts arrive
+  /// back-to-back or out of order.
+  final String? turnId;
+
+  TranscriptEntry(this.fromUser, this.text, [this.turnId]);
 }
 
 class MainApp extends StatefulWidget {
@@ -88,7 +99,14 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
 
   // conversation state
   bool _conversing = false;
-  bool _allowBargeIn = false;
+
+  // on-device audio processing (applied at mic start). Full-duplex barge-in
+  // relies on the AEC to strip the Halo speaker's bleed out of the mic, and on
+  // voice mode to band-pass the AEC output so the server VAD only hears the
+  // near-end - matching the Python sample's defaults (--aec-off / --no-voice-mode
+  // turn them off there).
+  bool _aec = true;
+  bool _voiceMode = true;
 
   final List<TranscriptEntry> _transcript = [];
   final List<String> _eventLog = [];
@@ -115,9 +133,11 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
     _openai = OpenAiRealtime(
       onAudio: _handleOpenAiAudio,
       onInterrupted: _handleOpenAiInterrupted,
-      onInputTranscript: (text) => _appendTranscript(fromUser: true, text: text),
-      onOutputTranscript: (text) =>
-          _appendTranscript(fromUser: false, text: text),
+      isPlaybackPending: () => _conversing && (_pacer?.bufferedFrames ?? 0) > 0,
+      onInputTranscript: (text, id) =>
+          _appendTranscript(fromUser: true, text: text, turnId: id),
+      onOutputTranscript: (text, id) =>
+          _appendTranscript(fromUser: false, text: text, turnId: id),
       onTurnComplete: _handleTurnComplete,
       onEvent: _logEvent,
     );
@@ -211,6 +231,14 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
         return;
       }
 
+      // If the user pressed cancel (FAB) while we were connecting, cancel() has
+      // already torn down and set the state - don't proceed and resurrect the
+      // session with zombie click/display subscriptions.
+      if (currentState != ApplicationState.running) {
+        await _openai.disconnect();
+        return;
+      }
+
       // Halo button starts/stops the conversation
       await _clickSubs?.cancel();
       _clickSubs = RxClick().attach(frame!.dataResponse).listen(_handleClick);
@@ -225,7 +253,9 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
     } catch (e) {
       _log.severe('Error starting realtime session: $e');
       await _openai.disconnect();
-      setState(() => currentState = ApplicationState.ready);
+      // always return to ready so the FAB/footer aren't stuck disabled after a
+      // failed connect (e.g. a bad endpoint URL)
+      if (mounted) setState(() => currentState = ApplicationState.ready);
     }
   }
 
@@ -234,15 +264,25 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
     setState(() => currentState = ApplicationState.canceling);
 
     _displayTimer?.cancel();
-    await _stopConversation();
-    await _openai.disconnect();
+    try {
+      await _stopConversation();
+      await _openai.disconnect();
 
-    await frame!.sendMessage(clickSubsMsg, TxCode(value: 0).pack());
-    await _clickSubs?.cancel();
-    _clickSubs = null;
-    await frame!.sendMessage(clearMsg, TxCode().pack());
-
-    setState(() => currentState = ApplicationState.ready);
+      // Best-effort, timed-out device cleanup: a hung write here must not block
+      // the `finally` below, or the app stays stuck in `canceling`.
+      await _bleBestEffort('unsubscribe clicks',
+          () => frame!.sendMessage(clickSubsMsg, TxCode(value: 0).pack()));
+      await _clickSubs?.cancel();
+      _clickSubs = null;
+      await _bleBestEffort('clear display',
+          () => frame!.sendMessage(clearMsg, TxCode().pack()));
+    } catch (e) {
+      _log.warning('Error during cancel: $e');
+    } finally {
+      // always return to ready, even if teardown partially failed, so the
+      // FAB/footer don't stay stuck in the disabled `canceling` state
+      if (mounted) setState(() => currentState = ApplicationState.ready);
+    }
   }
 
   void _handleClick(ClickType type) {
@@ -296,7 +336,19 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
     _pacer = Lc3PacketPacer(
       intervalMs: lc3FrameDurationUs ~/ 1000,
       maxBufferDelayFrames: 6000, // cap phone-side buffer at 60s of audio
-      sendAudio: (data) async => frame!.sendAudio(data),
+      sendAudio: (data) async {
+        await frame!.sendAudio(data);
+        // Advance the playback clock by the real-time duration of what we just
+        // sent to the device (each LC3 frame is 10ms). This is the true "audio
+        // sent to the device" point, so the barge gate stays armed for the whole
+        // physical playout instead of reopening the instant the client queue
+        // drains (which would leak the reply's tail to the server).
+        final nFrames = data.lengthInBytes ~/ lc3FrameBytes;
+        if (nFrames > 0) {
+          _openai.advancePlaybackClock(
+              Duration(microseconds: lc3FrameDurationUs * nFrames));
+        }
+      },
     );
     _speakerLc3Subs = _speakerEncoder!.outputStream
         .listen((lc3Frame) => _pacer?.onNewPacketReceived(lc3Frame));
@@ -311,17 +363,40 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
 
     await frame!.sendMessage(
         startPlaybackMsg, TxCode(value: haloSpeakerVolume).pack());
-    await frame!.sendMessage(
-        startListeningMsg, TxCode(value: haloMicGainValue).pack());
+    await frame!.sendMessage(startListeningMsg,
+        _micStartPayload(gain: haloMicGainValue, aec: _aec, voice: _voiceMode));
+  }
+
+  /// START_LISTENING payload: three named bytes, one field each, decoded by the
+  /// frame app's START_LISTENING handler:
+  ///   [0] gain code 0..20 (10 = 0 dB)   [1] aec 0/1   [2] voice 0/1
+  /// Maps 1:1 onto frame.microphone.start{gain=}, .aec(bool), .voice(bool).
+  Uint8List _micStartPayload(
+          {required int gain, required bool aec, required bool voice}) =>
+      Uint8List.fromList(
+          [gain.clamp(0, 20), aec ? 1 : 0, voice ? 1 : 0]);
+
+  /// Run a best-effort BLE teardown step: bounded by a timeout and swallowing
+  /// errors, so a hung or failed device write can never block teardown from
+  /// reaching its terminal state. Without this, a stalled write leaves the app
+  /// parked in a transient state (`canceling`/`stopping`) where the FAB is gone
+  /// and every footer button is disabled - with no way out.
+  Future<void> _bleBestEffort(String what, Future<void> Function() op) async {
+    try {
+      await op().timeout(const Duration(seconds: 2));
+    } catch (e) {
+      _log.warning('$what failed/timed out during teardown: $e');
+    }
   }
 
   Future<void> _stopAudioPipeline() async {
-    try {
-      await frame!.sendMessage(stopListeningMsg, TxCode().pack());
-      await frame!.sendMessage(stopPlaybackMsg, TxCode().pack());
-    } catch (e) {
-      _log.warning('Error stopping device audio: $e');
-    }
+    // Timed-out so a degraded BLE link can't hang teardown (which would strand
+    // the app in a transient state where the FAB and all footer buttons are
+    // disabled). See [_bleBestEffort].
+    await _bleBestEffort('stop listening',
+        () => frame!.sendMessage(stopListeningMsg, TxCode().pack()));
+    await _bleBestEffort('stop playback',
+        () => frame!.sendMessage(stopPlaybackMsg, TxCode().pack()));
 
     await _micLc3Subs?.cancel();
     _micLc3Subs = null;
@@ -366,16 +441,12 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
   }
 
   /// decoded PCM microphone audio (already at the endpoint's sample rate):
-  /// batch and forward. Without acoustic echo cancellation the Halo mic hears
-  /// the Halo speaker, so by default the mic is muted while response audio is
-  /// playing (half-duplex). Enable barge-in to keep the mic open and let the
-  /// server's voice activity detection interrupt the response instead.
+  /// batch and forward. Full-duplex: the mic streams continuously, even while
+  /// a reply is playing, so the user can talk over it to interrupt (barge-in).
+  /// The on-device AEC strips the Halo speaker's bleed out of the mic feed, so
+  /// this is (mostly) near-end speech and the server VAD won't self-interrupt.
   void _handleMicPcm(Uint8List pcmFrame) {
     if (!_conversing) return;
-    if (!_allowBargeIn && (_pacer?.bufferedFrames ?? 0) > 0) {
-      _micPcmBatch.clear();
-      return;
-    }
 
     _micPcmBatch.add(pcmFrame);
     if (_micPcmBatch.length >= micBatchBytes) {
@@ -410,14 +481,20 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
     _displayDirty = true;
   }
 
-  /// accumulate incremental transcription fragments into per-speaker entries
-  void _appendTranscript({required bool fromUser, required String text}) {
+  /// accumulate incremental transcription fragments into per-turn bubbles. A
+  /// fragment extends the last bubble only when it is the same speaker AND the
+  /// same turn id; otherwise it starts a new bubble. Keying on the turn id (as
+  /// well as the speaker) keeps the next reply from being appended to the
+  /// previous bubble when transcripts arrive back-to-back or out of order.
+  void _appendTranscript(
+      {required bool fromUser, required String text, String? turnId}) {
     if (!mounted) return;
     setState(() {
-      if (_transcript.isNotEmpty && _transcript.last.fromUser == fromUser) {
-        _transcript.last.text += text;
+      final last = _transcript.isNotEmpty ? _transcript.last : null;
+      if (last != null && last.fromUser == fromUser && last.turnId == turnId) {
+        last.text += text;
       } else {
-        _transcript.add(TranscriptEntry(fromUser, text));
+        _transcript.add(TranscriptEntry(fromUser, text, turnId));
       }
     });
 
@@ -545,11 +622,26 @@ class MainAppState extends State<MainApp> with SimpleFrameAppState {
               SwitchListTile(
                 dense: true,
                 contentPadding: EdgeInsets.zero,
-                title: const Text(
-                    'Allow barge-in (mic stays open during replies - '
-                    'no echo cancellation yet)'),
-                value: _allowBargeIn,
-                onChanged: (v) => setState(() => _allowBargeIn = v),
+                title: const Text('Echo cancellation (AEC)'),
+                subtitle: const Text(
+                    'On-device AEC removes the speaker bleed so the mic can '
+                    'stay open for barge-in'),
+                value: _aec,
+                onChanged: _conversing
+                    ? null
+                    : (v) => setState(() => _aec = v),
+              ),
+              SwitchListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Voice mode'),
+                subtitle: const Text(
+                    'Band-pass the AEC output so the server VAD only hears '
+                    'near-end speech'),
+                value: _voiceMode,
+                onChanged: _conversing
+                    ? null
+                    : (v) => setState(() => _voiceMode = v),
               ),
               if (currentState == ApplicationState.running)
                 Card(
