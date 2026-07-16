@@ -1,14 +1,27 @@
+"""Restore the device display colour palette to the firmware defaults (Halo or Frame)."""
 import asyncio
+import argparse
 from brilliant_ble import BrilliantBle, BrilliantDeviceType
 
 async def main():
+    parser = argparse.ArgumentParser(description="Connect to a Halo/Frame device over BLE and run this example.")
+    parser.add_argument(
+        "--name",
+        default=None,
+        help='exact BLE device name, e.g. "Halo AB" or "Frame 4F"; defaults to the nearest device',
+    )
+    args = parser.parse_args()
     frame = BrilliantBle()
 
     try:
-        await frame.connect()
+        name = await frame.connect(name=args.name)
         # stop any application, if running, so we can send lua commands
         frame._user_print_response_handler = None
         await frame.send_break_signal()
+        fw = await frame.send_lua("print(frame.FIRMWARE_VERSION)", await_print=True)
+        tag = await frame.send_lua("print(frame.GIT_TAG)", await_print=True)
+        batt = await frame.send_lua("print(frame.battery_level())", await_print=True)
+        print(f"{name} | firmware {fw} | git {tag} | battery {batt}%")
 
         if frame.type == BrilliantDeviceType.FRAME:
             # Set the palette back to the firmware default
@@ -50,11 +63,10 @@ async def main():
             await frame.send_lua("frame.display.assign_color_ycbcr(15, 13, 4, 3);print(0)", await_print=True) # CLOUDBLUE
 
         print("Default palette set.")
-        await frame.disconnect()
-
     except Exception as e:
-        print(f"Not connected to Device: {e}")
-        return
+        print(f"An error occurred: {e}")
+    finally:
+        await frame.disconnect()
 
 if __name__ == "__main__":
     asyncio.run(main())

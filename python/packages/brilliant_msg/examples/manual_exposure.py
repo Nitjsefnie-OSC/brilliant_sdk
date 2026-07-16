@@ -1,4 +1,5 @@
 import asyncio
+import argparse
 from PIL import Image
 import io
 
@@ -8,9 +9,20 @@ async def main():
     """
     Set camera exposure settings manually and take a single photo
     """
+    parser = argparse.ArgumentParser(description="Connect to a Halo/Frame device and run this example.")
+    parser.add_argument(
+        "--name",
+        default=None,
+        help='exact BLE device name, e.g. "Halo AB" or "Frame 4F"; defaults to the nearest device',
+    )
+    args = parser.parse_args()
     frame = BrilliantMsg()
     try:
-        await frame.connect()
+        name = await frame.connect(name=args.name)
+        fw = await frame.send_lua("print(frame.FIRMWARE_VERSION)", await_print=True)
+        tag = await frame.send_lua("print(frame.GIT_TAG)", await_print=True)
+        batt = await frame.send_lua("print(frame.battery_level())", await_print=True)
+        print(f"{name} | firmware {fw} | git {tag} | battery {batt}%")
 
         if frame.type != BrilliantDeviceType.FRAME:
             print("Manual exposure is a Frame-only feature")

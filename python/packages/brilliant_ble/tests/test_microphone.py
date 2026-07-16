@@ -4,6 +4,7 @@ Records audio and saves it as a WAV file with timestamped filename.
 """
 
 import asyncio
+import argparse
 from brilliant_ble import BrilliantBle
 import numpy as np
 import wave
@@ -101,8 +102,19 @@ async def record_and_save(b: BrilliantBle, sample_rate, bit_depth, channels=2):
 
 
 async def main():
+    parser = argparse.ArgumentParser(description="Connect to a Halo/Frame device over BLE and run this test.")
+    parser.add_argument(
+        "--name",
+        default=None,
+        help='exact BLE device name, e.g. "Halo AB" or "Frame 4F"; defaults to the nearest device',
+    )
+    args = parser.parse_args()
     b = BrilliantBle()
-    await b.connect(data_response_handler=receive_data)
+    name = await b.connect(name=args.name, data_response_handler=receive_data)
+    fw = await b.send_lua("print(frame.FIRMWARE_VERSION)", await_print=True)
+    tag = await b.send_lua("print(frame.GIT_TAG)", await_print=True)
+    batt = await b.send_lua("print(frame.battery_level())", await_print=True)
+    print(f"{name} | firmware {fw} | git {tag} | battery {batt}%")
     await record_and_save(b, sample_rate=16000, bit_depth=16, channels=1)
     await b.disconnect()
 
