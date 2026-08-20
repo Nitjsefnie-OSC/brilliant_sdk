@@ -221,11 +221,11 @@ uv run pytest packages/halo_emulator/tests/
 uv run pytest packages/brilliant_msg/tests/ packages/halo_emulator/tests/
 ```
 
-The `brilliant_ble` package has hardware integration tests that require a connected Frame device:
+The `brilliant_ble` package has hardware integration tests that require a connected Frame or Halo device:
 
 ```bash
-# Requires a connected Frame device over BLE
-uv run pytest packages/brilliant_ble/tests/test_ble.py
+# Requires a connected device over BLE (skipped without BRILLIANT_DEVICE=1)
+BRILLIANT_DEVICE=1 uv run pytest packages/brilliant_ble/tests/test_ble.py
 
 # Standalone hardware scripts (not pytest):
 uv run python packages/brilliant_ble/tests/test_display.py
