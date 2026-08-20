@@ -90,6 +90,12 @@ bundle. Consequences:
 - Keep the TypeScript devDependency **pinned to an exact version** across all three
   packages. A caret once let one package resolve a newer minor, which changed
   declaration output and type-checking behaviour for that package alone.
+- `typedoc` peer-depends on a bounded TypeScript range, so it constrains that pin.
+  `brilliant-ble` and `brilliant-msg` have typedoc and `brilliant-sdk` does not,
+  which is how the versions drifted apart in the first place. When raising
+  TypeScript, update typedoc in the same change or `npm install` fails with
+  `ERESOLVE`; if the declared typedoc range already allows a newer release,
+  `npm update typedoc` is enough and no manifest edit is needed.
 - Declaration output is pinned with `dts({ entryRoot: 'src' })`. Without it, a
   `paths` alias that pulls a sibling's sources into the program shifts declarations
   into a nested directory and silently breaks the declared `types` entry. If
