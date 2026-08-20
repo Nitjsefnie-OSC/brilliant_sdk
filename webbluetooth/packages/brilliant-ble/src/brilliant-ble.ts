@@ -410,10 +410,15 @@ export class BrilliantBle {
         if (showMe) {
             console.log("Transmitting (hex):", Array.from(data).map(b => b.toString(16).padStart(2, '0')).join(' '));
         }
+        // TypeScript 5.9 narrowed BufferSource to ArrayBufferView<ArrayBuffer>,
+        // while a bare Uint8Array is Uint8Array<ArrayBufferLike> and no longer
+        // matches. Everything reaching here is ArrayBuffer-backed, so assert the
+        // type rather than copying the buffer -- this is a per-packet hot path.
+        const payload = data as BufferSource;
         if (awaitBtResponse) {
-            await this.txCharacteristic.writeValueWithResponse(data);
+            await this.txCharacteristic.writeValueWithResponse(payload);
         } else {
-            await this.txCharacteristic.writeValueWithoutResponse(data);
+            await this.txCharacteristic.writeValueWithoutResponse(payload);
         }
     }
 
@@ -536,10 +541,15 @@ export class BrilliantBle {
         if (data.byteLength > mtu) {
             return;
         }
+        // TypeScript 5.9 narrowed BufferSource to ArrayBufferView<ArrayBuffer>,
+        // while a bare Uint8Array is Uint8Array<ArrayBufferLike> and no longer
+        // matches. Everything reaching here is ArrayBuffer-backed, so assert the
+        // type rather than copying the buffer -- this is a per-packet hot path.
+        const payload = data as BufferSource;
         if (awaitBtResponse) {
-            await this.audioTxCharacteristic.writeValueWithResponse(data);
+            await this.audioTxCharacteristic.writeValueWithResponse(payload);
         } else {
-            await this.audioTxCharacteristic.writeValueWithoutResponse(data);
+            await this.audioTxCharacteristic.writeValueWithoutResponse(payload);
         }
     }
 

@@ -1,3 +1,22 @@
+## 3.0.0
+
+* `brilliant-ble` is no longer bundled into this package's output — it is now an
+  external dependency resolved from `node_modules` at install time, the same way the
+  Python and Dart SDKs resolve theirs. Previously every release snapshotted a copy of
+  `brilliant-ble`, which meant fixes to it could not reach users without republishing
+  this package, and importing both packages directly produced two separate copies of
+  the same classes (so `instanceof` comparisons across the boundary failed)
+* Breaking only for consumers loading the UMD build via a plain `<script>` tag: they
+  must now load `brilliant-ble` first and expose it as the `brilliantBle` global.
+  Bundler and ESM consumers are unaffected — npm installs `brilliant-ble`
+  automatically as a declared dependency
+* `brilliant-ble` floor raised to `^1.1.0`. This package calls
+  `drainPrintChannel()`, which only exists from `brilliant-ble` 1.1.0; while
+  `brilliant-ble` was bundled the range was cosmetic, but now that it resolves at
+  install time the floor has to be accurate
+* TypeScript pinned to an exact version so declaration output cannot shift with a
+  minor compiler release
+
 ## 2.1.0
 
 True-up against Halo firmware 0.8.8.

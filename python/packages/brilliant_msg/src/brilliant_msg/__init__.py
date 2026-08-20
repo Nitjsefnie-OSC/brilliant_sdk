@@ -2,8 +2,12 @@
 brilliant_msg - Message Package defines Transmit- and Receive-related message classes and their associated Lua handlers for Brilliant Labs Frame and Halo devices (https://brilliant.xyz/)
 """
 
-__version__ = "7.0.0"
+from importlib.metadata import PackageNotFoundError, version as _pkg_version
 
+try:
+    __version__ = _pkg_version("brilliant-msg")
+except PackageNotFoundError:  # running from a source tree without an install
+    __version__ = "0.0.0.dev0"
 from .brilliant_msg import BrilliantMsg
 
 from .tx_auto_exp_settings import TxAutoExpSettings
