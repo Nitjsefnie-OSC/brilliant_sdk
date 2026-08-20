@@ -1,6 +1,6 @@
 {
   "name": "brilliant-msg",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "type": "module",
   "main": "dist/brilliant-msg.umd.js",
   "module": "dist/brilliant-msg.es.js",
@@ -24,6 +24,7 @@
     "preview": "vite preview",
     "dev:demo": "vite --config example/vite.config.ts",
     "docs:api": "typedoc --out example/dist/api src",
+    "pretest": "node scripts/pretest.mjs",
     "test": "node --test"
   },
   "keywords": [],
