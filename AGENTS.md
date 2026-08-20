@@ -77,9 +77,10 @@ language. Its README documents the REPL, test-writing API, and the supported
    implementation is incomplete until ported to the other two (check git log:
    parity commits are the norm). If you can only do one, say so explicitly.
 2. **Device-side Lua is triplicated byte-for-byte** in
-   `python/.../brilliant_msg/lua/`, `flutter/.../brilliant_msg/lib/lua/`,
-   `webbluetooth/.../brilliant-msg/src/lua/` (both `.lua` and hand-minified
-   `.min.lua`). Any edit must be applied to all three; run
+   `python/packages/brilliant_msg/src/brilliant_msg/lua/`,
+   `flutter/packages/brilliant_msg/lib/lua/` and
+   `webbluetooth/packages/brilliant-msg/src/lua/` (both `.lua` and
+   hand-minified `.min.lua`). Any edit must be applied to all three; run
    `python3 tools/check_lua_parity.py` (CI enforces it).
 3. **Same class names, per-language file naming**: `TxPlainText` lives in
    `tx_plain_text.py` / `tx/plain_text.dart` / `tx/plain-text.ts`. Example
