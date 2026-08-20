@@ -237,7 +237,11 @@ export class RxPhoto {
 
         // Put the original image data into the temporary canvas
         tempCtx.putImageData(new ImageData(
-            new Uint8ClampedArray(rawImageData.data.buffer),
+            // The buffer is typed ArrayBufferLike, but ImageData requires a view
+            // backed by a plain ArrayBuffer. TypeScript 5.9 enforces that
+            // distinction; the canvas ImageData this comes from is never
+            // SharedArrayBuffer-backed, so assert rather than copy.
+            new Uint8ClampedArray(rawImageData.data.buffer as ArrayBuffer),
             rawImageData.width,
             rawImageData.height
         ), 0, 0);

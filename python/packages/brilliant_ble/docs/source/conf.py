@@ -12,7 +12,14 @@ sys.path.insert(0, os.path.abspath('../../src'))
 project = 'brilliant_ble'
 copyright = '2025, luke-brilliant'
 author = 'luke-brilliant'
-release = '3.0.0'
+# Derived from the installed package metadata so it cannot drift from
+# pyproject.toml the way a hardcoded string does.
+from importlib.metadata import PackageNotFoundError, version as _pkg_version
+
+try:
+    release = _pkg_version("brilliant-ble")
+except PackageNotFoundError:  # building without an install
+    release = "0.0.0.dev0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
