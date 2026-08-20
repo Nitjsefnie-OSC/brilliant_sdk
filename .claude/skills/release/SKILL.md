@@ -96,6 +96,11 @@ bundle. Consequences:
   TypeScript, update typedoc in the same change or `npm install` fails with
   `ERESOLVE`; if the declared typedoc range already allows a newer release,
   `npm update typedoc` is enough and no manifest edit is needed.
+- **`vite build` is not a type check.** Its dts step reports type errors without
+  failing the build, so a broken type can pass `npm run build` cleanly and still
+  break the docs workflow, which runs `typedoc` and exits non-zero. Run
+  `npm run docs:api` in `brilliant-ble` and `brilliant-msg` before publishing, or
+  the GitHub Pages deploy fails after the merge.
 - Declaration output is pinned with `dts({ entryRoot: 'src' })`. Without it, a
   `paths` alias that pulls a sibling's sources into the program shifts declarations
   into a nested directory and silently breaks the declared `types` entry. If
