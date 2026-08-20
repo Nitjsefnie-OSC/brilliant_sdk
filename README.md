@@ -68,6 +68,26 @@ All three SDKs share the same two-layer architecture:
 
 ---
 
+## Develop Without Hardware
+
+The [`halo-emulator`](./python/packages/halo_emulator/) package
+([PyPI](https://pypi.org/project/halo-emulator/)) runs device-side Lua apps in
+a firmware-faithful Halo emulator — Lua 5.4, real fonts and palette, IMU / tap
+/ microphone event injection — so apps can be developed and tested with no
+glasses attached:
+
+```bash
+pip install halo-emulator
+halo-emulator ./my_app/   # interactive REPL + display window
+```
+
+The device-side Lua is identical across all three SDKs, so the emulator is
+useful for validating the Lua half of Flutter and WebBluetooth apps too. See
+its [README](./python/packages/halo_emulator/README.md) for the test-writing
+API and the supported `frame.*` surface.
+
+---
+
 ## Device Support
 
 Both **Halo** and **Frame** are supported across all SDK implementations. Device type is detected automatically after connecting.
@@ -86,8 +106,18 @@ Both **Halo** and **Frame** are supported across all SDK implementations. Device
 
 ## Documentation
 
-- [Brilliant Labs developer docs](https://docs.brilliant.xyz/)
-- [Lua API reference](https://docs.brilliant.xyz/halo/halo-sdk/)
+- [Brilliant Labs developer docs](https://docs.brilliant.xyz/) — device docs,
+  SDK guides, and the on-device Lua API references for
+  [Halo](https://docs.brilliant.xyz/halo/halo-sdk-lua/) and
+  [Frame](https://docs.brilliant.xyz/frame/frame-sdk-lua/)
+- Python API reference: [brilliant-ble](https://brilliant-ble.readthedocs.io/)
+  · [brilliant-msg](https://brilliant-msg.readthedocs.io/)
+- [WebBluetooth examples + TypeDoc](https://brilliantlabsar.github.io/brilliant_sdk/)
+- Example indexes: [Python msg](./python/packages/brilliant_msg/examples/EXAMPLES.md)
+  · [Python ble](./python/packages/brilliant_ble/examples/EXAMPLES.md)
+  · [Flutter apps](./flutter/packages/simple_brilliant_app/example/EXAMPLES.md)
+  · [WebBluetooth](./webbluetooth/packages/brilliant-msg/example/EXAMPLES.md)
+- AI coding agents: start at [`AGENTS.md`](./AGENTS.md)
 
 ---
 

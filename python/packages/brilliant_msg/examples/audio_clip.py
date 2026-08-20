@@ -1,3 +1,4 @@
+"""Record a 5-second audio clip from the device microphone (RxAudio) and save it as a WAV file."""
 import asyncio
 import argparse
 

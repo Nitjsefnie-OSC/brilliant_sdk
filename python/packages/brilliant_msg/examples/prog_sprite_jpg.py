@@ -1,3 +1,4 @@
+"""Display a JPEG image on the device display progressively, quantized to a 16-color TxSprite and sent slice-by-slice as a TxImageSpriteBlock to keep peak memory low."""
 import asyncio
 import argparse
 from pathlib import Path

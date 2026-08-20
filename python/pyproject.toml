@@ -6,6 +6,9 @@ dev = [
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+markers = [
+    "device: requires a physical Brilliant device connected over BLE (opt in with BRILLIANT_DEVICE=1)",
+]
 
 [tool.uv.workspace]
 members = [

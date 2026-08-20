@@ -1,3 +1,4 @@
+"""Auto-capture a photo once the frameside app sees the IMU is stable, then receive it via RxPhoto (JPEG, or optionally QOI) and open it in the system viewer."""
 import asyncio
 import argparse
 import io

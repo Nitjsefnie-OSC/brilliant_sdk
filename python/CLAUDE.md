@@ -1,52 +1,38 @@
-# CLAUDE.md
+# CLAUDE.md — python workspace
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Architecture, cross-SDK parity rules, and reading paths are in the repo-root
+`AGENTS.md` — read that first. This file is uv-workspace specifics only.
 
-## Overview
-
-This is a **uv workspace** for the Brilliant SDK for Python, providing integration with Brilliant Labs AR devices (Frame and Halo smart glasses). It contains 4 packages under `packages/`.
+This is a **uv workspace** with 4 packages under `packages/`: `brilliant_ble`,
+`brilliant_msg`, `brilliant_sdk` (meta-package), and `halo_emulator`
+(firmware-faithful Halo emulator, published to PyPI as `halo-emulator` — use it
+to run device-side Lua without hardware).
 
 ## Commands
 
 Requires [uv](https://docs.astral.sh/uv/).
 
 ```bash
-uv sync --all-packages          # install all packages and dependencies
-uv sync --all-packages --extra tests  # include test dependencies
-uv run pytest packages/brilliant_msg/tests/  # run tests for a single package
-uv build --package brilliant-ble  # build a specific package
+uv sync --all-packages --all-extras   # install everything incl. test deps
+uv run pytest                         # all hardware-free tests (~240, fast)
+uv run pytest packages/brilliant_msg/tests/   # one package
+uv build --package brilliant-ble      # build a specific package
+uv run halo-emulator ./my_app/        # interactive emulator REPL
 ```
 
-Publishing to PyPI (publish in dependency order):
-```bash
-uv publish --token <token> dist/brilliant_ble-*
-uv publish --token <token> dist/brilliant_msg-*
-uv publish --token <token> dist/brilliant_sdk-*
-```
+- Device-requiring tests are skipped unless `BRILLIANT_DEVICE=1` is set; most
+  `test_*.py` under `packages/brilliant_ble/tests/` are standalone device
+  scripts (`uv run python <file> --name Halo`), not pytest tests — see the
+  `conftest.py` there.
+- **Publishing**: use the `release` skill (`.claude/skills/release/`) — do not
+  publish ad hoc; local workspace resolution hides unreleased-dependency
+  breakage.
 
-## Architecture
+## Python-specific patterns
 
-The SDK is organized in layers:
-
-**`brilliant_ble`** — Low-level BLE communication layer. Handles device scanning, connection, MTU-aware packet splitting, and characteristic I/O. Uses `bleak`. Exposes `BrilliantBle` and `BrilliantDeviceType`.
-
-**`brilliant_msg`** — Application-level messaging protocol. Defines TX (host → device) and RX (device → host) message types. TX messages implement `pack()` → `bytes` for BLE transmission. RX messages are parsed from incoming byte streams. Each message type has a corresponding Lua script in `src/brilliant_msg/lua/` that runs on the device. Both full and `.min.lua` versions are included.
-
-**`brilliant_sdk`** — Meta-package that installs both `brilliant_ble` and `brilliant_msg` as a single dependency.
-
-**`halo_emulator`** — Lua 5.4 emulator (via `lupa`) for testing Halo apps without hardware. Not published to PyPI.
-
-## Key Design Patterns
-
-- **Message protocol**: Each TX message type has a unique message code (e.g. `0x0d`). `pack()` serializes to `bytes`. The BLE layer handles chunking based on negotiated MTU. Lua scripts on the device reassemble and render.
-- **Async**: All device interaction uses `asyncio` / `async`/`await` throughout.
-- **Lua pairing**: Every message type in `brilliant_msg` has a corresponding `.lua` and `.min.lua` file. When adding new message types, both the Python class and the Lua script must be updated together.
-
-## Tests
-
-Tests live in `packages/brilliant_msg/tests/` and `packages/brilliant_ble/tests/`. No hardware is required for `brilliant_msg` tests. Run from the workspace root:
-
-```bash
-uv sync --all-packages --extra tests
-uv run pytest packages/brilliant_msg/tests/
-```
+- All device I/O is `asyncio` (`bleak` under the hood).
+- TX message classes implement `pack() -> bytes`; RX classes parse from byte
+  streams; message codes are single bytes assigned per app.
+- When adding a message type: Python class + device Lua (in
+  `src/brilliant_msg/lua/`, plus `.min.lua`) must be updated together, then
+  mirrored to the Flutter and WebBluetooth SDKs (`tools/check_lua_parity.py`).

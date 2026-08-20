@@ -1,7 +1,7 @@
 -- Module to encapsulate taking and sending photos as simple frame app messages
 local _M = {}
 
--- Frame to phone msg codes
+-- Frame to phone flags
 local IMAGE_MSG = 0x07
 local IMAGE_FINAL_MSG = 0x08
 local AUTOEXP_DATA_MSG = 0x11

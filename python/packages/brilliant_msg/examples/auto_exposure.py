@@ -1,3 +1,4 @@
+"""Frame-only: step the camera auto-exposure algorithm repeatedly (TxAutoExpSettings/RxAutoExpResult), printing each result and showing a photo taken at each step."""
 import asyncio
 import argparse
 from PIL import Image

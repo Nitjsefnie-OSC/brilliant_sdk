@@ -1,0 +1,30 @@
+name: Lua parity check
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'python/packages/brilliant_msg/src/brilliant_msg/lua/**'
+      - 'flutter/packages/brilliant_msg/lib/lua/**'
+      - 'webbluetooth/packages/brilliant-msg/src/lua/**'
+      - 'tools/check_lua_parity.py'
+  pull_request:
+    paths:
+      - 'python/packages/brilliant_msg/src/brilliant_msg/lua/**'
+      - 'flutter/packages/brilliant_msg/lib/lua/**'
+      - 'webbluetooth/packages/brilliant-msg/src/lua/**'
+      - 'tools/check_lua_parity.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check device-side Lua is in sync across SDKs
+        run: python3 tools/check_lua_parity.py

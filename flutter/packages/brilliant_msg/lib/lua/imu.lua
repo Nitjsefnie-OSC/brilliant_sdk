@@ -9,7 +9,9 @@ function _M.send_imu_data(msg_code)
     local imu_data_raw = frame.imu.raw()
     local data = nil
 
-    -- Pack msg_code as an unsigned byte, one byte of padding, and then 
+    -- Pack msg_code as an unsigned byte, one byte of padding, and then
+    -- 6 float32 in host frame order: compass (X,Y,Z) then accel (X,Y,Z),
+    -- where host axes are +X = right, +Y = forward, +Z = up.
     -- Frame: each 14-bit signed value as a 32-bit float
     -- Halo: each 32-bit float value as a 32-bit float
     if (frame.HARDWARE_VERSION == 'Frame') then

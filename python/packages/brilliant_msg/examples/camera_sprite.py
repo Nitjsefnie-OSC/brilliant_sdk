@@ -1,3 +1,4 @@
+"""Take a photo with the device camera (RxPhoto) and show it back on the device display as a progressive TxImageSpriteBlock."""
 import asyncio
 import argparse
 

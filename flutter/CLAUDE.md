@@ -1,10 +1,13 @@
-# CLAUDE.md
+# CLAUDE.md — flutter workspace
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Architecture, cross-SDK parity rules, and reading paths are in the repo-root
+`AGENTS.md` — read that first. This file is Melos-workspace specifics only.
 
-## Overview
-
-This is a **Melos monorepo** for the Brilliant SDK for Flutter, providing integration with Brilliant Labs AR devices (Frame and Halo smart glasses). It contains 4 packages under `packages/`.
+This is a **Melos monorepo** with 4 packages under `packages/`:
+`brilliant_ble` (uses `flutter_blue_plus`), `brilliant_msg`, `brilliant_sdk`
+(meta-package), and `simple_brilliant_app` (high-level `SimpleFrameApp` /
+`FrameVisionApp` framework, with 17 example apps under `example/` — see
+`example/EXAMPLES.md`).
 
 ## Commands
 
@@ -14,36 +17,23 @@ Requires [Melos](https://melos.invertase.dev/) (`dart pub global activate melos`
 melos bootstrap   # flutter pub get in all packages (run after cloning)
 melos analyze     # flutter analyze in all packages
 melos format      # dart format . in all packages
-melos test        # flutter test in all packages
-melos version     # bump versions across packages
+melos test        # flutter test in all packages (no hardware needed)
+cd packages/brilliant_msg && flutter test test/tx/code_test.dart  # single file
 ```
 
-Run tests for a single package:
-```bash
-cd packages/brilliant_msg && flutter test
-cd packages/brilliant_msg && flutter test test/tx/code_test.dart  # single test file
-```
+- **Publishing**: use the `release` skill (`.claude/skills/release/`) —
+  `pubspec_overrides.yaml` points sibling packages at local source, so local
+  tests prove nothing about a published package's dependencies.
+- No hardware-free way to run device-side Lua here — validate the Lua half
+  with the Python `halo-emulator` (`pip install halo-emulator`); the Lua files
+  are identical across SDKs.
 
-Before publishing: replace all `path:` dependencies with semver constraints, then `dart pub publish` from the package folder.
+## Dart-specific patterns
 
-## Architecture
-
-The SDK is organized in layers:
-
-**`brilliant_ble`** — BLE communication layer. Handles device scanning (`BrilliantBluetooth`), connection state, MTU-aware packet splitting, and Device Firmware Update. Uses `flutter_blue_plus`. This layer is device-type-agnostic.
-
-**`brilliant_msg`** — Application-level messaging protocol. Defines TX (phone → Frame/Halo) and RX (Frame/Halo → phone) message types. TX messages implement `pack()` → `Uint8List` for BLE transmission. RX messages are parsed from incoming byte streams. Each message type has a corresponding Lua script in `lib/lua/` that runs on the device to handle parsing/rendering. Both full and `.min.lua` versions are included.
-
-**`brilliant_sdk`** — Meta-package that re-exports `brilliant_ble` and `brilliant_msg` as a single import.
-
-**`simple_brilliant_app`** — High-level Flutter app framework (`SimpleFrameApp`, `FrameVisionApp`) for rapid development. Contains 15+ example apps under `example/`.
-
-## Key Design Patterns
-
-- **Message protocol**: Each TX message type has a unique message code (e.g. `0x0d`). `TxMsg.pack()` serializes to `Uint8List`. The BLE layer handles chunking based on negotiated MTU. Lua scripts on the device reassemble and render.
-- **Streams**: BLE connection state and incoming data are exposed as Dart streams. Device interaction is async/await throughout.
-- **Lua pairing**: Every message type in `brilliant_msg` has a corresponding `.lua` and `.min.lua` file. When adding new message types, both the Dart class and the Lua script must be updated together.
-
-## Tests
-
-Tests live in `packages/brilliant_msg/test/` (4 test files). There are no tests in other packages currently.
+- BLE state and RX data are exposed as Dart streams; TX classes implement
+  `pack() -> Uint8List`.
+- When adding a message type: Dart class + device Lua (in `lib/lua/`, plus
+  `.min.lua`) must be updated together, then mirrored to the Python and
+  WebBluetooth SDKs (`tools/check_lua_parity.py`).
+- Lua files ship as Flutter assets — new `.lua` files must be listed under
+  `assets:` in the consuming app's `pubspec.yaml`.

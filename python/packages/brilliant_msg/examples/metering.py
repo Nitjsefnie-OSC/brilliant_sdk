@@ -1,3 +1,4 @@
+"""Frame-only: repeatedly query the camera's light metering data (RxMeteringData) and print the changing values to the console."""
 import asyncio
 import argparse
 

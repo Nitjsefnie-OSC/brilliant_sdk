@@ -1,3 +1,4 @@
+"""Halo-only: drive a simple Lua layout engine (header/body/footer/speech-wave views) with TxCode mode switches and TxTextSpriteBlock text."""
 import asyncio
 import argparse
 

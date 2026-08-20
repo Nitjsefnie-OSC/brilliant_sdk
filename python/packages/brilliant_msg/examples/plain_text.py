@@ -1,3 +1,4 @@
+"""Display a sequence of text strings on the device display using TxPlainText messages."""
 import asyncio
 import argparse
 

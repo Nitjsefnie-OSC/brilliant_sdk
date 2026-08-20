@@ -1,3 +1,4 @@
+"""Halo-only: play an LC3 audio file through the device speaker by streaming LC3 frames with send_audio(), started and stopped via TxCode."""
 import asyncio
 import argparse
 

@@ -1,3 +1,4 @@
+"""Frame-only: continuously capture photos (RxPhoto) and display them in an OpenCV window alongside live auto-exposure parameters (RxAutoExpResult)."""
 import asyncio
 import argparse
 from PIL import Image

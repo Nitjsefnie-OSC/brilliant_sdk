@@ -1,3 +1,4 @@
+"""Display 1-, 2- and 4-bit indexed PNG images on the device display, sent as lz4-compressed TxSprite slices in a TxImageSpriteBlock."""
 import asyncio
 import argparse
 from pathlib import Path

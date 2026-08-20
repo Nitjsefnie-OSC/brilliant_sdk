@@ -1,41 +1,34 @@
-# CLAUDE.md
+# CLAUDE.md — webbluetooth workspace
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Architecture, cross-SDK parity rules, and reading paths are in the repo-root
+`AGENTS.md` — read that first. This file is npm-workspace specifics only.
 
-## Overview
-
-This is a **npm workspace** for the Brilliant SDK for WebBluetooth (TypeScript), providing integration with Brilliant Labs AR devices (Frame and Halo smart glasses) from browser environments. It contains 3 packages under `packages/`.
+This is an **npm workspace** (TypeScript, browser WebBluetooth) with 3
+packages under `packages/`: `brilliant-ble`, `brilliant-msg`, and
+`brilliant-sdk` (re-exports both). Examples live in each package's `example/`
+directory; `packages/brilliant-msg/example/EXAMPLES.md` indexes them with full
+source inline.
 
 ## Commands
 
 ```bash
-npm install                    # install all dependencies (run from workspace root or package dir)
-npm run build                  # build dist/ (run from a package directory)
-npm run dev                    # start Vite dev server for the example app
-npm run docs:api               # generate TypeDoc API docs
+npm install        # from workspace root or a package dir
+npm run build      # build dist/ (run from a package directory)
+npm run dev        # Vite dev server for the example app
+npm run docs:api   # generate TypeDoc API docs
 ```
 
-Publishing to npm (publish in dependency order):
-```bash
-npm publish --access public    # from each package directory
-# Order: brilliant-ble → brilliant-msg → brilliant-sdk
-```
+- **`dist/` is committed** and must be rebuilt before publishing.
+- **Publishing**: use the `release` skill (`.claude/skills/release/`).
+- There is no test suite here — `npm run build` per package is the minimum
+  check. Validate device-side Lua with the Python `halo-emulator`
+  (`pip install halo-emulator`); the Lua files are identical across SDKs.
 
-The `dist/` files are committed to the repository and must be rebuilt before publishing.
+## TypeScript-specific patterns
 
-## Architecture
-
-The SDK is organized in layers:
-
-**`brilliant-ble`** — Low-level WebBluetooth connection layer. Handles device scanning, connection, MTU-aware packet splitting, and characteristic I/O. Exposes `BrilliantBle` and `BrilliantDeviceType`.
-
-**`brilliant-msg`** — Application-level messaging protocol. Defines TX (host → device) and RX (device → host) message types. TX messages serialize to `Uint8Array` for BLE transmission. RX messages are parsed from incoming byte streams. Each message type has a corresponding Lua script in `src/lua/` that runs on the device. Both full and `.min.lua` versions are included.
-
-**`brilliant-sdk`** — Meta-package (`src/index.ts` re-exports everything from `brilliant-ble` and `brilliant-msg`) for a single install.
-
-## Key Design Patterns
-
-- **Message protocol**: Each TX message type has a unique message code (e.g. `0x0d`). The BLE layer handles chunking based on negotiated MTU. Lua scripts on the device reassemble and render.
-- **Async**: All device interaction uses `Promise`/`async`/`await` throughout.
-- **Lua pairing**: Every message type in `brilliant-msg` has a corresponding `.lua` and `.min.lua` file in `src/lua/`. When adding new message types, both the TypeScript class and the Lua script must be updated together.
-- **Build output**: Vite produces both ESM (`*.es.js`) and UMD (`*.umd.js`) bundles plus TypeScript declaration files in `dist/`.
+- Vite builds ESM (`*.es.js`) and UMD (`*.umd.js`) bundles plus `.d.ts` files
+  into `dist/`.
+- TX classes serialize to `Uint8Array`; all device I/O is Promise/async.
+- When adding a message type: TS class + device Lua (in `src/lua/`, plus
+  `.min.lua`) must be updated together, then mirrored to the Python and
+  Flutter SDKs (`tools/check_lua_parity.py`).

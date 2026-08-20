@@ -1,3 +1,4 @@
+"""Continuously capture photos from the device camera (TxCaptureSettings/RxPhoto) and display them live in an OpenCV window."""
 import asyncio
 import argparse
 from PIL import Image

@@ -1,3 +1,4 @@
+"""Halo-only: assign a custom display palette and draw indexed bitmaps with frame.display.bitmap()."""
 import asyncio
 import argparse
 
