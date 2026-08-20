@@ -1,6 +1,6 @@
 {
   "name": "brilliant-msg",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "type": "module",
   "main": "dist/brilliant-msg.umd.js",
   "module": "dist/brilliant-msg.es.js",
@@ -35,14 +35,14 @@
     "@types/node": "^22.15.17",
     "@types/web-bluetooth": "^0.0.21",
     "typedoc": "^0.28.5",
-    "typescript": "^5.8.3",
+    "typescript": "5.9.3",
     "vite": "^6.3.5",
     "vite-plugin-dts": "^4.5.4"
   },
   "dependencies": {
     "@pdf-lib/upng": "^1.0.1",
     "@types/lz4js": "^0.2.1",
-    "brilliant-ble": "^1.0.0",
+    "brilliant-ble": "^1.1.0",
     "image-js": "^0.37.0",
     "image-q": "^4.0.0",
     "lz4js": "^0.2.0"
