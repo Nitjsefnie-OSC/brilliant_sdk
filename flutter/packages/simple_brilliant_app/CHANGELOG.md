@@ -1,3 +1,7 @@
+## 9.1.1
+
+* Raised the `brilliant_ble` constraint to `^5.1.0`. 9.1.0 calls `BrilliantDevice.drainPrintChannel()`, which only exists from `brilliant_ble` 5.1.0 — under the previous `^5.0.0` constraint a fresh resolve could pick 5.0.1 and fail. No other changes
+
 ## 9.1.0
 
 True-up against Halo firmware 0.8.8.

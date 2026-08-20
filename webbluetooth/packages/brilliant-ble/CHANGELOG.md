@@ -1,3 +1,9 @@
+## 1.1.0
+
+* New `drainPrintChannel(quietMs = 250, maxTotalMs = 1500)` — discards unsolicited print output already arriving on the channel (such as the `interrupted`/reboot banner produced by a break or reset) so the next awaited response is clean rather than the stray banner. Bounded so it never hangs: resolves after `quietMs` of silence, or `maxTotalMs` at the latest
+
+Added to the source during the Halo firmware 0.8.8 work but shipped without a version bump. `brilliant-msg` bundles `brilliant-ble` into its own output, so no released `brilliant-msg` was affected; this release brings the standalone package back in step with the source.
+
 ## 1.0.1
 
 * Fixed `uploadFileFromString()` failing on Lua files containing non-ASCII characters (e.g. `°`): chunks are now sized by UTF-8 byte length rather than string length, so multi-byte characters can no longer push a packet over the MTU. Multi-byte characters and escape sequences are never split across chunks

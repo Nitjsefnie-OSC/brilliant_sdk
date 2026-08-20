@@ -1,3 +1,7 @@
+## 7.1.1
+
+* Raised the `brilliant-ble` floor to `>=3.2.0`. 7.1.0's `connect()` calls `BrilliantBle.drain_print_channel()`, which only exists from `brilliant-ble` 3.2.0 — under the previous `>=3.0.0` floor a fresh install could resolve 3.1.1 and fail with `AttributeError` on connect. No other changes
+
 ## 7.1.0
 
 True-up against Halo firmware 0.8.8.
