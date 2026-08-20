@@ -1,3 +1,4 @@
+"""Subscribe to multi-tap events from the device (RxTap) and print the tap counts to the console."""
 import asyncio
 import argparse
 

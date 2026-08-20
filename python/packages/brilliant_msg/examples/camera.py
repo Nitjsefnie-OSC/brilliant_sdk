@@ -1,3 +1,4 @@
+"""Take a photo with the device camera (TxCaptureSettings/RxPhoto) and open it in the system image viewer."""
 import asyncio
 import argparse
 from PIL import Image

@@ -1,3 +1,4 @@
+"""Subscribe to IMU updates from the device (RxIMU) and print pitch, roll and raw compass values to the console."""
 import asyncio
 import argparse
 

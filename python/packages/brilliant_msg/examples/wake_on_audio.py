@@ -1,3 +1,4 @@
+"""Halo-only: let the device enter standby, then on wake (Audio Activity Detection, tap or Bluetooth) receive the streamed audio (RxAudio) and save it as a WAV file."""
 import asyncio
 import argparse
 import traceback

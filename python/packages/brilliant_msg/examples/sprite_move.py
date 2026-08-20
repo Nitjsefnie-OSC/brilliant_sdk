@@ -1,3 +1,4 @@
+"""Send a 1-bit PNG sprite (TxSprite) to the device once, then move it around the display with TxSpriteCoords and TxCode draw messages."""
 import asyncio
 import argparse
 from pathlib import Path

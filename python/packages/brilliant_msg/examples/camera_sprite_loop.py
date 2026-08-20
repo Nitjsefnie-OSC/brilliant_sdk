@@ -1,3 +1,4 @@
+"""Continuously take photos (RxPhoto) and render each on the device display as a dithered 1-bit TxSprite sent as a TxImageSpriteBlock."""
 import asyncio
 import argparse
 from PIL import Image

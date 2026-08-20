@@ -1,3 +1,4 @@
+"""Frame-only: set manual camera exposure settings (TxManualExpSettings), then take a photo (RxPhoto) and open it in the system viewer."""
 import asyncio
 import argparse
 from PIL import Image

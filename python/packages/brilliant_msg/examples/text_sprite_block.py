@@ -1,3 +1,4 @@
+"""Display rasterized multilingual text (including right-to-left scripts) on the device display using TxTextSpriteBlock with user-specified fonts."""
 import asyncio
 import argparse
 

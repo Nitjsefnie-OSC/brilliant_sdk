@@ -1,3 +1,4 @@
+"""Display a JPEG image on the device display, quantized by TxSprite to 16 colors and resized to fit."""
 import asyncio
 import argparse
 from pathlib import Path

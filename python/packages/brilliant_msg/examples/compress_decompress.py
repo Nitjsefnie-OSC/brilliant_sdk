@@ -1,3 +1,4 @@
+"""Send lz4-compressed data to the device, which decompresses it on-device with frame.compression.decompress() and prints the original string back."""
 import asyncio
 import argparse
 from brilliant_ble import BrilliantBle

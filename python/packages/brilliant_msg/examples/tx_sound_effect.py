@@ -1,3 +1,4 @@
+"""Helper: custom TxSoundEffect message used by sound_effects.py (not a runnable example)."""
 import struct
 from dataclasses import dataclass
 

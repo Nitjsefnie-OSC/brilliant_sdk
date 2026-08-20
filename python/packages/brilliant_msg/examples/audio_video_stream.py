@@ -1,3 +1,4 @@
+"""Stream device microphone audio to the computer's speakers (RxAudio) while capturing and showing a photo (RxPhoto) every 5 seconds."""
 import asyncio
 import argparse
 import io

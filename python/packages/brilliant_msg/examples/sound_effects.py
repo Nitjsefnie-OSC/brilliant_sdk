@@ -1,3 +1,4 @@
+"""Halo-only: play the firmware's built-in sfxr sound effect presets through the speaker using the custom TxSoundEffect message."""
 import asyncio
 import argparse
 import random

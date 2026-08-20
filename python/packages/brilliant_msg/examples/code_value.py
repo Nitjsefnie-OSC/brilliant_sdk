@@ -1,3 +1,4 @@
+"""Send a series of single-byte TxCode control messages to the device, where the frameside app prints each value as it arrives."""
 import asyncio
 import argparse
 

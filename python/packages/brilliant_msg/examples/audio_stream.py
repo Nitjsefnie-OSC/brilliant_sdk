@@ -1,3 +1,4 @@
+"""Stream microphone audio from the device (RxAudio in streaming mode) and play it live through the computer's speakers with pvspeaker."""
 import asyncio
 import argparse
 import numpy as np
