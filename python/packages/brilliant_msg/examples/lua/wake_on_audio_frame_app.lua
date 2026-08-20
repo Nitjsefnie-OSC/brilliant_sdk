@@ -18,9 +18,12 @@ function app_loop()
 
 	-- tell the host program that the frameside app is ready (waiting on await_print)
 	print('Frame app is running')
-	--print(frame.time.utc() .. ' Clearing firmware logs on Halo')
-	--frame.log.clear()
-	--frame.sleep(0.5) -- not sure if the clear is finishing cleanly
+	-- frame.log is only present in firmware built with logging support
+	--if frame.log ~= nil then
+	--	print(frame.time.utc() .. ' Clearing firmware logs on Halo')
+	--	frame.log.clear()
+	--	frame.sleep(0.5) -- not sure if the clear is finishing cleanly
+	--end
 
 
 	print(frame.time.utc() .. ' Standby, then streaming audio on wake from AAD, tap, Bluetooth')
@@ -70,13 +73,18 @@ function app_loop()
 			print(frame.time.utc() .. ' Stopping audio stream after 3 seconds')
 			frame.microphone.stop()
 
-			-- dump the firmware logs back to the host
-			print(frame.time.utc() .. ' Dumping firmware logs to host')
-			frame.log.list()
-			print(frame.time.utc() .. ' Log file #0')
-			frame.log.show(0)
-			print(frame.time.utc() .. ' Log file #1')
-			frame.log.show(1)
+			-- dump the firmware logs back to the host, if this firmware
+			-- build has logging support compiled in
+			if frame.log == nil then
+				print(frame.time.utc() .. ' Skipping firmware log dump: this device does not support frame.log')
+			else
+				print(frame.time.utc() .. ' Dumping firmware logs to host')
+				frame.log.list()
+				print(frame.time.utc() .. ' Log file #0')
+				frame.log.show(0)
+				print(frame.time.utc() .. ' Log file #1')
+				frame.log.show(1)
+			end
 		end
 		--frame.yield()
 	end
