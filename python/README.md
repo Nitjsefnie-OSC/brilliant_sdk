@@ -54,16 +54,19 @@ This installs all packages as editable installs, resolving `brilliant-ble` and `
 |---------|-------------|
 | `uv sync --all-packages` | Install all packages (editable) |
 | `uv sync --all-packages --all-extras` | Include test and optional dependencies |
+| `uv run pytest` | Run all hardware-free tests |
 | `uv run pytest packages/brilliant_msg/tests/` | Run `brilliant_msg` tests |
 | `uv run pytest packages/halo_emulator/tests/` | Run `halo_emulator` tests |
-| `uv run pytest packages/brilliant_msg/tests/ packages/halo_emulator/tests/` | Run all software tests |
 | `halo-emulator ./my_app/` | Launch interactive emulator REPL |
 
 ---
 
 ## 🧪 Testing
 
-The `brilliant_msg` and `halo_emulator` packages have automated test suites that run without any hardware.
+A bare `pytest` run is hardware-free: it covers `brilliant_msg` (message
+packing/parsing, handler dispatch), `halo_emulator` (Lua VM, display
+primitives, event injection) and the `brilliant_ble` unit tests, while
+device-requiring tests are skipped automatically.
 
 ```bash
 cd python
@@ -71,21 +74,19 @@ cd python
 # Install all test dependencies
 uv sync --all-packages --all-extras
 
-# Run brilliant_msg tests (message packing/parsing, handler dispatch)
-uv run pytest packages/brilliant_msg/tests/
-
-# Run halo_emulator tests (Lua VM, display primitives, event injection)
-uv run pytest packages/halo_emulator/tests/
-
-# Run both together
-uv run pytest packages/brilliant_msg/tests/ packages/halo_emulator/tests/
+# Run everything that works without a device
+uv run pytest
 ```
 
-The `brilliant_ble` package has hardware integration tests that require a connected device over BLE:
+Tests and scripts that need a real Frame or Halo connected over BLE:
 
 ```bash
-# Requires a connected Frame or Halo device
-uv run pytest packages/brilliant_ble/tests/test_ble.py
+# Opt in to the hardware integration tests (marked `device`)
+BRILLIANT_DEVICE=1 uv run pytest packages/brilliant_ble/tests/test_ble.py
+
+# Most other test_*.py files under brilliant_ble/tests/ are standalone
+# device-exercise scripts, run directly rather than through pytest:
+uv run python packages/brilliant_ble/tests/test_camera.py --name Halo
 ```
 
 ---
