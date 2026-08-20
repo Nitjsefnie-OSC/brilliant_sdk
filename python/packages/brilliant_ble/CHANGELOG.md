@@ -1,3 +1,10 @@
+## 3.2.0
+
+* New `drain_print_channel(quiet=0.25, max_total=1.5)` — discards unsolicited print output already arriving on the channel (such as the `interrupted`/reboot banner produced by a break or reset) so the next `send_lua(await_print=True)` receives a clean response rather than the stray banner. Bounded so it never hangs: returns after `quiet` seconds of silence, or `max_total` at the latest
+* New `name` property returning the connected device's name
+
+Both were added to the source during the Halo firmware 0.8.8 work but shipped without a version bump. `brilliant-msg` 7.1.0 calls `drain_print_channel()` while still allowing `brilliant-ble >= 3.0.0`, so a fresh install could resolve 3.1.1 and fail with `AttributeError` on `connect()`. Use `brilliant-msg` 7.1.1 or later, which requires this release.
+
 ## 3.1.1
 
 * Fixed `upload_file_from_string()` failing on Lua files containing non-ASCII characters (e.g. `°`): chunks are now sized by UTF-8 byte length rather than string length, so multi-byte characters can no longer push a packet over the MTU. Multi-byte characters and escape sequences are never split across chunks

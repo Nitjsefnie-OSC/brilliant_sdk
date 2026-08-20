@@ -1,3 +1,11 @@
+## 5.1.0
+
+* New `BrilliantDevice.drainPrintChannel()` — discards unsolicited print output already arriving on the channel (such as the `interrupted`/reboot banner produced by a break or reset) so the next `sendString(awaitResponse: true)` receives a clean response rather than the stray banner. Bounded so it never hangs: returns after `quiet` of silence, or `maxTotal` at the latest
+* New `BrilliantBluetooth.getSystemConnectedDevices()` — returns all Brilliant devices connected at the system level. Such devices do not advertise, so scanning can never find them; on iOS an ANCS-soliciting Halo is auto-connected by the system, making this the common case rather than the exception. The existing single-device `getSystemConnectedDevice(uuid)` is unchanged
+* `scan()` now yields system-connected devices first, then falls back to scanning for advertising ones (system-connected entries have no RSSI reading)
+
+These were added to the source during the Halo firmware 0.8.8 work but shipped without a version bump. `simple_brilliant_app` 9.1.0 calls `drainPrintChannel()` while still allowing `brilliant_ble ^5.0.0`, so a fresh resolve could pick 5.0.1 and fail. Use `simple_brilliant_app` 9.1.1 or later, which requires this release.
+
 ## 5.0.1
 
 * Fixed `uploadScript` failing on Lua files containing non-ASCII characters (e.g. `°`): chunks are now sized by UTF-8 byte length rather than string length, so multi-byte characters can no longer push a packet over the MTU (#12). Multi-byte characters and escape sequences are never split across chunks
