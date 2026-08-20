@@ -150,7 +150,43 @@ up in the tarball. Stash unrelated changes first.
 - Python `__version__` is derived from installed package metadata, so it needs no
   manual update — never reintroduce a hardcoded version string.
 
-## 8. After publishing
+## 8. Build the reference docs before publishing
+
+Each ecosystem publishes API docs through a different pipeline, and **all three fail
+after the fact** — a docs break is invisible until the merge or the upload has already
+happened. Build all of them locally first.
+
+```bash
+# npm -> GitHub Pages (workflow runs typedoc on push to main)
+cd webbluetooth/packages/brilliant-ble && npm run docs:api
+cd ../brilliant-msg && npm run docs:api
+
+# Python -> Read the Docs (builds on push to main)
+cd python
+uv run --extra docs --package brilliant-ble \
+  sphinx-build -b html packages/brilliant_ble/docs/source /tmp/sx-ble
+uv run --extra docs --package brilliant-msg \
+  sphinx-build -b html packages/brilliant_msg/docs/source /tmp/sx-msg
+
+# Dart -> pub.dev (generates dartdoc only AFTER the version is published)
+cd flutter/packages/<pkg> && dart doc --output /tmp/dartdoc-<pkg>
+```
+
+The Dart one matters most: `flutter pub publish --dry-run` does **not** run dartdoc,
+and pub.dev only generates docs once the version is live — which cannot be unpublished.
+
+Known-harmless noise: sphinx warns `html_static_path entry '_static' does not exist`,
+and dartdoc reports a few unresolved-reference warnings. Neither fails the build, so
+do not add `-W` without fixing those first.
+
+Only `brilliant_ble` and `brilliant_msg` have Read the Docs configs; `brilliant-sdk`
+and `halo-emulator` have none, so their docs are the README on PyPI.
+
+Sphinx `release` and Python `__version__` both derive from installed package
+metadata. Never reintroduce a hardcoded version in `docs/source/conf.py` — it silently
+mislabels the published docs.
+
+## 9. After publishing
 
 Verify from a scratch project outside the repo — a fresh install of each published
 package, plus an import and a real call. If hardware is available, connect to a
