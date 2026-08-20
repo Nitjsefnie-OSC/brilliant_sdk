@@ -53,9 +53,12 @@ async def main():
 
         # Send the text for display on Frame
         # Note that the frameside app is expecting a message of type TxPlainText on msgCode 0x0a
-        for display_string in ["Ken", "Ryu", "Blanka", "Vega\nSagat\nBalrog", " "]:
-            await frame.send_message(0x0a, TxPlainText(display_string).pack())
+        for i, display_string in enumerate(["Ken", "Ryu", "Blanka", "Vega\nSagat\nBalrog"]):
+            await frame.send_message(0x0a, TxPlainText(display_string, x=150, y=50, palette_offset=i + 1).pack())
             await asyncio.sleep(1.0)
+
+        # clear the display
+        await frame.send_message(0x0a, TxPlainText(" ").pack())
 
         # unhook the print handler
         frame.detach_print_response_handler()

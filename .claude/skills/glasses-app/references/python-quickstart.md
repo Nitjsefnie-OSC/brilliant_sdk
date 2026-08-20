@@ -22,7 +22,7 @@ async def main():
         frame.attach_print_response_handler()      # device print()/errors -> stdout
         await frame.start_frame_app()              # blocks until the app prints ready
 
-        await frame.send_message(TEXT_MSG, TxPlainText("Hello!").pack())
+        await frame.send_message(TEXT_MSG, TxPlainText("Hello!", x=100, y=120).pack())
         await asyncio.sleep(2.0)
 
         frame.detach_print_response_handler()
@@ -53,7 +53,7 @@ function app_loop()
                 local flag, raw = item[1], item[2]
                 if flag == TEXT_MSG then
                     local t = plain_text.parse_plain_text(raw)
-                    frame.display.text(t.string, 100, 100)
+                    frame.display.text(t.string, t.x, t.y)
                     if frame.HARDWARE_VERSION == 'Frame' then
                         frame.display.show()      -- Frame: flip the buffer
                     end
