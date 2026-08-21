@@ -4,14 +4,18 @@ build-backend = "hatchling.build"
 
 [project]
 name = "halo-emulator"
-version = "2.0.0"
+version = "2.0.1"
 requires-python = ">=3.10"
 dependencies = [
     "lupa>=2.0,<3.0",
     "numpy>=2.2.3,<3.0.0",
     "pillow>=11.1.0,<12.0.0",
     "lz4>=4.4.3,<5.0.0",
-    "pygame>=2.5.0,<3.0.0",
+    # pygame ships no CPython 3.14 wheels yet; pygame-ce is the maintained
+    # drop-in fork (same `import pygame`) and does. Markers keep the two
+    # mutually exclusive per environment.
+    "pygame>=2.5.0,<3.0.0; python_version < '3.14'",
+    "pygame-ce>=2.5.8,<3.0.0; python_version >= '3.14'",
 ]
 authors = [
     { name = "luke-brilliant" },

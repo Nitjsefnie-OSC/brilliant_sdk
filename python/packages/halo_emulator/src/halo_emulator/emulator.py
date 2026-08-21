@@ -127,7 +127,17 @@ class HaloEmulator:
             sandbox_dir=self._sandbox_dir,
         )
         if self._print_handler is not None:
-            self._lua.globals().print = self._print_handler
+            # Match Lua's print(): tostring each argument and tab-join, so the
+            # handler always receives a str even for tables, numbers, or
+            # Python exception objects caught by a Lua pcall.
+            lua_tostring = self._lua.globals().tostring
+
+            def _lua_print(*args):
+                handler = self._print_handler
+                if handler is not None:
+                    handler("\t".join(str(lua_tostring(a)) for a in args))
+
+            self._lua.globals().print = _lua_print
 
     def connect(self) -> None:
         """

@@ -1,3 +1,16 @@
+## 2.0.1
+
+### Fixed
+
+* `print_handler` now always receives a `str`, as documented. Lua `print()` is
+  emulated faithfully: each argument is passed through `tostring` and the
+  results are tab-joined — previously the handler was installed as Lua's
+  `print` directly and could receive raw values (numbers, tables, or the
+  Python stop exception caught by an app's `pcall`)
+* Installs on Python 3.14: the `pygame` dependency (no CPython 3.14 wheels)
+  is replaced by the drop-in `pygame-ce` fork on Python >= 3.14 via
+  environment markers; environments on Python <= 3.13 are unchanged
+
 ## 2.0.0
 
 True-up against Halo firmware 0.8.8 (`frame.FIRMWARE_VERSION` now reports

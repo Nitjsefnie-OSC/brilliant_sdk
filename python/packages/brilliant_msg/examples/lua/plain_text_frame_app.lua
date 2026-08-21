@@ -1,15 +1,19 @@
 local data = require('data.min')
 local plain_text = require('plain_text.min')
 
--- Phone to Frame flags
-TEXT_FLAG = 0x0a
+-- Phone to Frame msg codes
+TEXT_MSG = 0x0a
 
 -- draw the specified text on the display
 function print_text(text)
     local i = 0
-    for line in text:gmatch('([^\n]*)\n?') do
+    for line in text.string:gmatch('([^\n]*)\n?') do
         if line ~= "" then
-            frame.display.text(line, 100, i * 60 + 40)
+            if frame.HARDWARE_VERSION == 'Frame' then
+                frame.display.text(line, text.x, i * 60 + text.y, {color=text.color})
+            else
+                frame.display.text(line, text.x, i * 60 + text.y, text.color)
+            end
             i = i + 1
         end
     end
@@ -33,7 +37,13 @@ function app_loop()
 		frame.display.power_save(false)
 	end
 
-	print_text('Frame App Started')
+	if frame.HARDWARE_VERSION == 'Frame' then
+		frame.display.text('Frame App Started', 1, 1)
+		frame.display.show()
+	else
+		frame.display.clear()
+		frame.display.text('Frame App Started', 50, 50)
+	end
 
 	-- tell the host program that the frameside app is ready (waiting on await_print)
 	print('Frame app is running')
@@ -48,17 +58,18 @@ function app_loop()
 					local flag = items[i][1]
 					local raw = items[i][2]
 
-					if flag == TEXT_FLAG then
+					if flag == TEXT_MSG then
 						local text = plain_text.parse_plain_text(raw)
 						if text ~= nil and text.string ~= nil then
 							clear_display()
-							print_text(text.string)
+							print_text(text)
 							collectgarbage('collect')
 						end
 					end
 				end
 
-				frame.sleep(0.1)
+				-- can't sleep for long, might be lots of incoming bluetooth data to process
+				frame.sleep(0.001)
 			end
 		)
 		-- Catch an error (including the break signal) here
