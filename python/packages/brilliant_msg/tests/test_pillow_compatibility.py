@@ -1,17 +1,34 @@
 """Packaging compatibility checks for the published brilliant-msg metadata."""
 
-from importlib import metadata
+from pathlib import Path
+import tomllib
 
 from packaging.requirements import Requirement
+from packaging.utils import canonicalize_name
 from packaging.version import Version
 
 
-def test_published_metadata_allows_pillow_12():
-    """The published dependency requirement must admit the Pillow 12 line."""
-    pillow_requirement = next(
-        Requirement(requirement)
-        for requirement in metadata.requires("brilliant-msg") or []
-        if Requirement(requirement).name.lower() == "pillow"
-    )
+def test_source_metadata_has_single_pillow_compatibility_envelope():
+    """The checked-in manifest must declare the complete supported Pillow range."""
+    manifest_path = Path(__file__).resolve().parents[1] / "pyproject.toml"
+    with manifest_path.open("rb") as manifest:
+        project = tomllib.load(manifest)["project"]
 
-    assert Version("12.0.0") in pillow_requirement.specifier
+    requirements = [Requirement(raw) for raw in project.get("dependencies", [])]
+    pillow_requirements = [
+        requirement
+        for requirement in requirements
+        if canonicalize_name(requirement.name) == "pillow"
+    ]
+
+    assert len(pillow_requirements) == 1, (
+        "expected exactly one Pillow dependency, found "
+        f"{len(pillow_requirements)}"
+    )
+    pillow_specifier = pillow_requirements[0].specifier
+
+    for version in ("11.1.0", "12.0.0", "12.1.0", "12.999.0"):
+        assert Version(version) in pillow_specifier
+
+    assert Version("11.0.9") not in pillow_specifier
+    assert Version("13.0.0") not in pillow_specifier
