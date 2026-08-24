@@ -25,7 +25,16 @@ def test_source_metadata_has_single_pillow_compatibility_envelope():
         "expected exactly one Pillow dependency, found "
         f"{len(pillow_requirements)}"
     )
-    pillow_specifier = pillow_requirements[0].specifier
+    pillow_requirement = pillow_requirements[0]
+
+    assert not pillow_requirement.extras, "Pillow must not request extras"
+    assert pillow_requirement.marker is None, "Pillow must not be conditional"
+    assert {str(specifier) for specifier in pillow_requirement.specifier} == {
+        ">=11.1.0",
+        "<13.0.0",
+    }
+
+    pillow_specifier = pillow_requirement.specifier
 
     for version in ("11.1.0", "12.0.0", "12.1.0", "12.999.0"):
         assert Version(version) in pillow_specifier
