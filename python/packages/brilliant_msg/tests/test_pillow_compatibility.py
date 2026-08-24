@@ -1,11 +1,44 @@
 """Packaging compatibility checks for the published brilliant-msg metadata."""
 
 from pathlib import Path
-import tomllib
+import sys
+
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
 
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
 from packaging.version import Version
+
+
+def test_python_310_toml_backport_is_declared_in_dev_group():
+    """The Python 3.10 fallback must be supplied by the dev dependency group."""
+    workspace_manifest_path = Path(__file__).resolve().parents[3] / "pyproject.toml"
+    with workspace_manifest_path.open("rb") as manifest:
+        workspace = tomllib.load(manifest)
+
+    dev_requirements = [
+        Requirement(raw)
+        for raw in workspace.get("dependency-groups", {}).get("dev", [])
+    ]
+    tomli_requirements = [
+        requirement
+        for requirement in dev_requirements
+        if canonicalize_name(requirement.name) == "tomli"
+    ]
+
+    assert len(tomli_requirements) == 1, (
+        "expected exactly one Python 3.10 TOML backport dependency, found "
+        f"{len(tomli_requirements)}"
+    )
+    tomli_requirement = tomli_requirements[0]
+
+    assert str(tomli_requirement.marker) == 'python_version < "3.11"'
+    assert {str(specifier) for specifier in tomli_requirement.specifier} == {
+        ">=2.0.1"
+    }
 
 
 def test_source_metadata_has_single_pillow_compatibility_envelope():
